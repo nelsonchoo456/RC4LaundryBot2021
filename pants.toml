@@ -1,0 +1,15 @@
+[GLOBAL]
+pants_version = "2.7.1"
+backend_packages = [
+	"pants.backend.python",
+	"pants.backend.python.lint.black",
+	"pants.backend.python.lint.flake8",
+	"pants.backend.python.lint.isort",
+	"pants.backend.python.typecheck.mypy"
+]
+
+[anonymous-telemetry]
+enabled = false
+
+[python-setup]
+interpreter_search_paths = ["./.venv/bin/python", "<PYENV>", "<PATH>"]
