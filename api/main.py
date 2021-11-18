@@ -13,13 +13,21 @@ app = FastAPI()
 
 
 # TODO test this
-@app.post("/machine", status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/machine",
+    status_code=status.HTTP_201_CREATED,
+    description="Creates a new machine.",
+)
 async def create_machine(m: machine.Machine, c: Connection = Depends(db.get_db)):
     machine.create_machine(c, m)
 
 
 # TODO test this
-@app.post("/machine/search", response_model=List[machine.Machine])
+@app.post(
+    "/machine/search",
+    response_model=List[machine.Machine],
+    description="Directly search for machines based on its attributes.",
+)
 async def search_machines(
     search: machine.MachineSearch, c: Connection = Depends(db.get_db)
 ):
@@ -28,7 +36,11 @@ async def search_machines(
 
 
 # TODO test this
-@app.get("/machine", response_model=List[machine.Machine])
+@app.get(
+    "/machine",
+    response_model=List[machine.Machine],
+    description="Returns a list of machines filtered by the query parameters provided.",
+)
 async def get_machines(
     *,
     c: Connection = Depends(db.get_db),
@@ -53,7 +65,14 @@ async def get_machines(
 
 
 # TODO test this
-@app.put("/machine", response_model=machine.Machine)
-async def update_machine(mu: machine.MachineUpdate, c: Connection = Depends(db.get_db)):
-    m = machine.update_machine(c, mu)  # should return machine.Machine
+@app.put(
+    "/machine",
+    response_model=machine.Machine,
+    description="Performs partial update of specified machine.",
+)
+async def update_machine(
+    mu: machine.MachineUpdate, floor: int, pos: int, c: Connection = Depends(db.get_db)
+):
+    # TODO query param validation for floor and pos
+    m = machine.update_machine(c, floor, pos, mu)  # should return machine.Machine
     return m

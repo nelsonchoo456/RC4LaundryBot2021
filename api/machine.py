@@ -3,6 +3,7 @@ from typing import Optional
 
 from db.models import MachineType
 from db.models import machine as db_machine
+from fastapi import HTTPException, status
 from lib import WithOptionalFields
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import Connection, Row
@@ -61,16 +62,9 @@ class MachineSearch(MachineOptional, metaclass=WithOptionalFields):
 
 # MachineUpdate is Machine with all fields optional, except floor and pos
 class MachineUpdate(MachineOptional):
-    floor: int = Field(..., ge=1, le=17, description="Which floor the machine is on.")
-    pos: int = Field(
-        ..., ge=0, le=3, description="Position of machine in the laundry room."
-    )
-
     class Config:
         schema_extra = {
             "example": {
-                "floor": 14,
-                "pos": 0,
                 "is_in_use": True,
                 "last_started_at": datetime.datetime.now(),
             }
@@ -113,13 +107,18 @@ def create_machine(db: Connection, m: Machine):
     db.execute(ins)
 
 
-def update_machine(c: Connection, mu: MachineUpdate):
+def update_machine(c: Connection, floor: int, pos: int, mu: MachineUpdate):
     stmnt = (
         db_machine.update()
-        .where(db_machine.c.floor == mu.floor)
-        .where(db_machine.c.pos == mu.pos)
+        .where(db_machine.c.floor == floor)
+        .where(db_machine.c.pos == pos)
         .values(**mu.dict(exclude_unset=True))
         .returning("*")
     )
     res = c.execute(stmnt).fetchone()
+    if not res:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "Machine at floor {} position {} not found".format(floor, pos),
+        )
     return Machine.from_row(res)
