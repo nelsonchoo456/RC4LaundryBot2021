@@ -1,8 +1,7 @@
 import datetime
 from typing import Optional
 
-from db.models import MachineType
-from db.models import machine as db_machine
+from db import models
 from fastapi import HTTPException, status
 from lib import WithOptionalFields
 from pydantic import BaseModel, Field
@@ -35,7 +34,7 @@ class Machine(BaseMachine):
         datetime.datetime(1970, 1, 1, 0, 0),
         description="When the machine was last started.",
     )
-    type: MachineType = Field(..., description="Washer or dryer.")
+    type: models.MachineType = Field(..., description="Washer or dryer.")
 
     @classmethod
     def from_row(cls, row: Row):
@@ -72,46 +71,47 @@ class MachineUpdate(MachineOptional):
 
 
 class MachineFilter(BaseMachine, metaclass=WithOptionalFields):
-    is_in_use: bool
-    type: MachineType
-    last_started_before: datetime.datetime
-    last_started_after: datetime.datetime
+    # TODO add documentation for these attributes
+    is_in_use: Optional[bool] = None
+    type: Optional[models.MachineType] = None
+    last_started_before: Optional[datetime.datetime] = None
+    last_started_after: Optional[datetime.datetime] = None
 
 
 def find_machines(c: Connection, mf: MachineFilter):
     d = mf.dict(exclude_none=True)
-    q = db_machine.select()
+    q = models.machine.select()
     for k, v in d.items():
         # TODO find a smarter way to do this
         if k == "last_started_before":
-            q = q.where(db_machine.c.last_started_at <= v)
+            q = q.where(models.machine.c.last_started_at <= v)
             continue
         if k == "last_started_after":
-            q = q.where(db_machine.c.last_started_at >= v)
+            q = q.where(models.machine.c.last_started_at >= v)
             continue
-        q = q.where(db_machine.c[k] == v)
+        q = q.where(models.machine.c[k] == v)
     res = c.execute(q)
     return Machine.from_rows(res)
 
 
 def search_machines(db: Connection, search: MachineSearch):
-    q = db_machine.select()
+    q = models.machine.select()
     for k, v in search.dict(exclude_unset=True).items():
-        q = q.where(db_machine.c[k] == v)
+        q = q.where(models.machine.c[k] == v)
     res = db.execute(q)
     return Machine.from_rows(res)
 
 
 def create_machine(db: Connection, m: Machine):
-    ins = db_machine.insert().values(**m.dict())
+    ins = models.machine.insert().values(**m.dict())
     db.execute(ins)
 
 
 def update_machine(c: Connection, floor: int, pos: int, mu: MachineUpdate):
     stmnt = (
-        db_machine.update()
-        .where(db_machine.c.floor == floor)
-        .where(db_machine.c.pos == pos)
+        models.machine.update()
+        .where(models.machine.c.floor == floor)
+        .where(models.machine.c.pos == pos)
         .values(**mu.dict(exclude_unset=True))
         .returning("*")
     )

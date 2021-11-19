@@ -4,6 +4,9 @@
 /.pids
 /.pants.workdir.file_lock*
 
-# virtualenv
+# python
 /.venv/
+**/__pycache__/
 
+# useless metadata
+**/.idea/

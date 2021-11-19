@@ -4,7 +4,7 @@ services:
     image: 'postgres' # latest postgres version
     ports:
       - 5432:5432
-    environment:
+    environment: # to be set in .env file
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_DB: $POSTGRES_DB
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD

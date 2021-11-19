@@ -13,3 +13,9 @@ class WithOptionalFields(pydantic.main.ModelMetaclass):
                 annotations[field] = Optional[annotations[field]]
         namespaces["__annotations__"] = annotations
         return super().__new__(cls, name, bases, namespaces, **kwargs)
+
+
+FLOOR_MIN = 1
+FLOOR_MAX = 17
+POS_MIN = 0
+POS_MAX = 3
