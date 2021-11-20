@@ -1,5 +1,4 @@
-import uuid
-
+import shortuuid
 from sqlalchemy.connectors import Connector
 
 from api.db.models import api_key
@@ -15,7 +14,7 @@ def validate_api_key(c: Connector, key: str) -> bool:
 
 # create_api_key generates an api key, stores it in the database, and then returns its value
 def create_api_key(c: Connector) -> str:
-    new_key = str(uuid.uuid4())
+    new_key = shortuuid.uuid()
     stmnt = api_key.insert().values(api_key=new_key)
     c.execute(stmnt)
     return new_key

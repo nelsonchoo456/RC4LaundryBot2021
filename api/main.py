@@ -9,3 +9,4 @@ models.metadata_obj.create_all(db.engine)
 app = FastAPI()
 
 app.include_router(routers.machine)
+app.include_router(routers.record)

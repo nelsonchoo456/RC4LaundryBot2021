@@ -1,16 +1,21 @@
 import datetime
 from typing import Optional
 
+import shortuuid
 from fastapi import HTTPException, status
-from pydantic import BaseModel, Field
-from sqlalchemy.engine import Connection, Row
+from pydantic import Field
+from sqlalchemy.engine import Connection
 
 from api.db import models
-from api.lib import WithOptionalFields
+from api.lib import BaseModel, WithOptionalFields
+from api.record import create_record
 
 
 class BaseMachine(BaseModel):
     # TODO refactor validation of floor and pos range
+    id: str = Field(
+        default_factory=shortuuid.uuid, description="A unique ID for this machine."
+    )
     floor: int = Field(..., ge=1, le=17, description="Which floor the machine is on.")
     pos: int = Field(
         ...,
@@ -23,6 +28,9 @@ class BaseMachine(BaseModel):
 # Machine DTO model, using PyDantic
 class Machine(BaseMachine):
     # TODO refactor validation of floor and pos range
+    id: str = Field(
+        default_factory=shortuuid.uuid, description="A unique ID for this machine."
+    )
     floor: int = Field(..., ge=1, le=17, description="Which floor the machine is on.")
     pos: int = Field(
         ...,
@@ -43,14 +51,6 @@ class Machine(BaseMachine):
     )
     type: models.MachineType = Field(..., description="Washer or dryer.")
 
-    @classmethod
-    def from_row(cls, row: Row):
-        return Machine(**row._asdict())
-
-    @classmethod
-    def from_rows(cls, rows):
-        return [Machine.from_row(row) for row in rows]
-
 
 # MachineOptional is Machine with all fields as Optional
 class MachineOptional(Machine, metaclass=WithOptionalFields):
@@ -68,7 +68,9 @@ class MachineSearch(MachineOptional, metaclass=WithOptionalFields):
 
 # MachineUpdate is the same as MachineOptional but the default values are None
 class MachineUpdate(MachineOptional):
-    floor: Optional[int] = Field(None, ge=1, le=17, description="Which floor the machine is on.")
+    floor: Optional[int] = Field(
+        None, ge=1, le=17, description="Which floor the machine is on."
+    )
     pos: Optional[int] = Field(
         None,
         ge=0,
@@ -134,6 +136,7 @@ def create_machine(db: Connection, m: Machine):
     db.execute(ins)
 
 
+# TODO automatically update last_started_at
 def update_machine(c: Connection, floor: int, pos: int, mu: MachineUpdate):
     stmnt = (
         models.machine.update()
@@ -148,4 +151,6 @@ def update_machine(c: Connection, floor: int, pos: int, mu: MachineUpdate):
             status.HTTP_404_NOT_FOUND,
             f"Machine at floor {floor} position {pos} not found",
         )
+    if mu.is_in_use:
+        create_record(c, res.id)
     return Machine.from_row(res)

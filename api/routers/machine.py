@@ -44,6 +44,7 @@ async def search_machines(
 async def get_machines(
     *,
     c: Connection = Depends(db.get_db),
+    id: Optional[str] = None,
     floor: Optional[int] = None,
     pos: Optional[int] = None,
     is_in_use: Optional[bool] = None,
@@ -54,6 +55,7 @@ async def get_machines(
     return machine.find_machines(
         c,
         machine.MachineFilter(
+            id=id,
             floor=floor,
             pos=pos,
             is_in_use=is_in_use,
