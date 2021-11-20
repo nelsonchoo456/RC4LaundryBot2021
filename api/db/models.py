@@ -2,7 +2,7 @@ import datetime
 import enum
 
 from sqlalchemy import (Boolean, Column, DateTime, Enum, Integer, Interval,
-                        MetaData, Table)
+                        MetaData, String, Table)
 
 metadata_obj = MetaData()
 
@@ -21,4 +21,11 @@ machine = Table(
     Column("duration", Interval, nullable=False),
     Column("last_started_at", DateTime, default=datetime.datetime(1970, 1, 1, 0, 0)),
     Column("type", Enum(MachineType)),
+)
+
+api_key = Table(
+    "api_key",
+    metadata_obj,
+    Column("id", Integer, primary_key=True),
+    Column("api_key", String, unique=True, nullable=False),
 )

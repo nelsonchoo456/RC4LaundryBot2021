@@ -1,7 +1,8 @@
 import uuid
 
-from api.db.models import api_key
 from sqlalchemy.connectors import Connector
+
+from api.db.models import api_key
 
 
 def validate_api_key(c: Connector, key: str) -> bool:

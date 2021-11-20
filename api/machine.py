@@ -1,18 +1,22 @@
 import datetime
 from typing import Optional
 
-from db import models
 from fastapi import HTTPException, status
-from lib import WithOptionalFields
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import Connection, Row
+
+from api.db import models
+from api.lib import WithOptionalFields
 
 
 class BaseMachine(BaseModel):
     # TODO refactor validation of floor and pos range
     floor: int = Field(..., ge=1, le=17, description="Which floor the machine is on.")
     pos: int = Field(
-        ..., ge=0, le=3, description="Position of machine in the laundry room."
+        ...,
+        ge=0,
+        le=3,
+        description="Position of machine in the laundry room. Starts from 0 and counts from left to right.",
     )
 
 
@@ -21,7 +25,10 @@ class Machine(BaseMachine):
     # TODO refactor validation of floor and pos range
     floor: int = Field(..., ge=1, le=17, description="Which floor the machine is on.")
     pos: int = Field(
-        ..., ge=0, le=3, description="Position of machine in the laundry room."
+        ...,
+        ge=0,
+        le=3,
+        description="Position of machine in the laundry room. Starts from 0 and counts from left to right.",
     )
     is_in_use: Optional[bool] = Field(
         False, description="Whether the machine is currently in use."
@@ -32,7 +39,7 @@ class Machine(BaseMachine):
     )
     last_started_at: Optional[datetime.datetime] = Field(
         datetime.datetime(1970, 1, 1, 0, 0),
-        description="When the machine was last started.",
+        description="Time at which the machine was last started.",
     )
     type: models.MachineType = Field(..., description="Washer or dryer.")
 
@@ -59,8 +66,28 @@ class MachineSearch(MachineOptional, metaclass=WithOptionalFields):
     pass
 
 
-# MachineUpdate is Machine with all fields optional, except floor and pos
+# MachineUpdate is the same as MachineOptional but the default values are None
 class MachineUpdate(MachineOptional):
+    floor: Optional[int] = Field(None, ge=1, le=17, description="Which floor the machine is on.")
+    pos: Optional[int] = Field(
+        None,
+        ge=0,
+        le=3,
+        description="Position of machine in the laundry room. Starts from 0 and counts from left to right.",
+    )
+    is_in_use: Optional[bool] = Field(
+        None, description="Whether the machine is currently in use."
+    )
+    duration: Optional[datetime.timedelta] = Field(
+        None,
+        description="Approximate duration, in seconds, of one cycle for this machine.",
+    )
+    last_started_at: Optional[datetime.datetime] = Field(
+        None,
+        description="Time at which the machine was last started.",
+    )
+    type: Optional[models.MachineType] = Field(None, description="Washer or dryer.")
+
     class Config:
         schema_extra = {
             "example": {
@@ -112,13 +139,13 @@ def update_machine(c: Connection, floor: int, pos: int, mu: MachineUpdate):
         models.machine.update()
         .where(models.machine.c.floor == floor)
         .where(models.machine.c.pos == pos)
-        .values(**mu.dict(exclude_unset=True))
+        .values(**mu.dict(exclude_unset=True, exclude_none=True))
         .returning("*")
     )
     res = c.execute(stmnt).fetchone()
     if not res:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
-            "Machine at floor {} position {} not found".format(floor, pos),
+            f"Machine at floor {floor} position {pos} not found",
         )
     return Machine.from_row(res)

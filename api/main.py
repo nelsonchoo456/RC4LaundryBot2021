@@ -1,6 +1,7 @@
-from db import db, models
 from fastapi import FastAPI
-import routers
+
+from api import routers
+from api.db import db, models
 
 # initialize database table(s), may want to move elsewhere
 # to a proper init func
