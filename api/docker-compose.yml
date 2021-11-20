@@ -1,10 +1,21 @@
 version: '3'
 services:
   db:
-    image: 'postgres' # latest postgres version
+    container_name: rc4laundry-api-db
+    image: 'postgres'
     ports:
-      - 5432:5432
-    environment: # to be set in .env file
+      - $POSTGRES_PORT:5432
+    environment:
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+
+  db-test:
+    container_name: rc4laundry-api-test-db
+    image: 'postgres'
+    ports:
+      - $POSTGRES_TEST_PORT:5432
+    environment:
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_DB: $POSTGRES_TEST_DB
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD

@@ -1,28 +1,23 @@
 import datetime
-import os
-import sys
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.engine import Connection
 
-# see https://chrisyeh96.github.io/2017/08/08/definitive-guide-python-imports.html#case-3-importing-from-parent-directory
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-)
 from api import machine
 from api.db import db, models
+from api.routers.lib import verify_api_key
 
 router = APIRouter(
     prefix="/machine",
 )
 
 
-# TODO test this
 @router.post(
-    "/",
+    "",
     status_code=status.HTTP_201_CREATED,
     description="Creates a new machine.",
+    dependencies=[Depends(verify_api_key)],
 )
 async def create_machine(m: machine.Machine, c: Connection = Depends(db.get_db)):
     machine.create_machine(c, m)
@@ -41,9 +36,8 @@ async def search_machines(
     return ms
 
 
-# TODO test this
 @router.get(
-    "/",
+    "",
     response_model=List[machine.Machine],
     description="Returns a list of machines filtered by the query parameters provided.",
 )
@@ -70,11 +64,11 @@ async def get_machines(
     )
 
 
-# TODO test this
 @router.put(
-    "/",
+    "",
     response_model=machine.Machine,
     description="Performs partial update of specified machine.",
+    dependencies=[Depends(verify_api_key)],
 )
 async def update_machine(
     mu: machine.MachineUpdate, floor: int, pos: int, c: Connection = Depends(db.get_db)
