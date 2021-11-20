@@ -15,3 +15,4 @@ SQLAlchemy==1.4.27
 starlette==0.16.0
 urllib3==1.26.7
 uvicorn==0.15.0
+shortuuid==1.0.8

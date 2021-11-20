@@ -7,9 +7,10 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 
 from api.db.db import engine
-from api.db.models import MachineType, api_key, machine, metadata_obj
+from api.db.models import MachineType, api_key, machine, metadata_obj, record
 from api.machine import Machine, MachineUpdate
 from api.main import app
+from api.record import BaseRecord, Record
 
 if TYPE_CHECKING:  # not sure if we need this
     from requests import Response
@@ -144,3 +145,38 @@ class TestMachine(unittest.TestCase):
             m = Machine.from_row(r)
             self.assertTrue(m.is_in_use)
             self.assertEqual(m.last_started_at, now)
+
+    def test_put_machine_to_use(self):
+        response = client.put(
+            "/machine",
+            params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},
+            data=MachineUpdate(is_in_use=True).json(),
+            headers={"x-api-key": "good-api-key"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # check that a record was created
+        with engine.connect() as db:
+            q = record.select()
+            res = db.execute(q).fetchone()
+            self.assertIsNotNone(res)
+            self.assertAlmostEqual(
+                datetime.datetime.now().timestamp(),
+                BaseRecord.from_row(res).time.timestamp(),
+                delta=0.1,
+            )
+
+        # check that record api works
+        response: Response = client.get(
+            "/record",
+            params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rec = Record(**response.json()[0])
+        self.assertEqual(rec.machine_id, self.mock_washer.id)
+        self.assertEqual(rec.floor, self.mock_washer.floor)
+        self.assertEqual(rec.pos, self.mock_washer.pos)
+        self.assertEqual(rec.type, self.mock_washer.type)
+        self.assertAlmostEqual(
+            rec.time.timestamp(), datetime.datetime.now().timestamp(), delta=0.1
+        )

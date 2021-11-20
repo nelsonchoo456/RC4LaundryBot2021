@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 import pydantic
+from sqlalchemy.engine import Row
 
 
 class WithOptionalFields(pydantic.main.ModelMetaclass):
@@ -15,5 +16,11 @@ class WithOptionalFields(pydantic.main.ModelMetaclass):
         return super().__new__(cls, name, bases, namespaces, **kwargs)
 
 
-TEST_ENV = "test"
-DEV_ENV = "dev"
+class BaseModel(pydantic.BaseModel):
+    @classmethod
+    def from_row(cls, row: Row):
+        return cls(**row._asdict())
+
+    @classmethod
+    def from_rows(cls, rows):
+        return [cls.from_row(row) for row in rows]
