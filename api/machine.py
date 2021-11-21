@@ -55,8 +55,6 @@ class Machine(BaseMachine):
     type: models.MachineType = _field_type
 
 
-
-
 # Machine with all fields optional and set to None as default
 class MachineOptional(BaseMachine):
     id: Optional[str] = _field_id_opt

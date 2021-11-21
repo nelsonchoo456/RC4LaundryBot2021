@@ -33,3 +33,6 @@ class BaseModel(pydantic.BaseModel):
     @classmethod
     def from_rows(cls, rows):
         return [cls.from_row(row) for row in rows]
+
+
+FLOORS = [5, 8, 11, 14, 17]
