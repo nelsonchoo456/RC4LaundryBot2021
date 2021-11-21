@@ -150,7 +150,7 @@ class TestMachine(unittest.TestCase):
                 m.last_started_at.timestamp(), now.timestamp(), delta=0.1
             )
 
-    def test_put_machine_to_use(self):
+    def test_put_machine_to_use_via_update(self):
         response = client.put(
             "/machine",
             params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},
@@ -191,3 +191,94 @@ class TestMachine(unittest.TestCase):
         self.assertAlmostEqual(
             rec.time.timestamp(), datetime.datetime.now().timestamp(), delta=0.1
         )
+
+    def test_start_machine_use(self):
+        # without API key
+        response: Response = client.put(
+            "/machine/start",
+            params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},
+            headers={"x-api-key": "bad-api-key"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # now with the good API key
+        response: Response = client.put(
+            "/machine/start",
+            params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},
+            headers={"x-api-key": "good-api-key"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        # then check that a record was created
+        with engine.connect() as db:
+            q = (
+                record.select()
+                .where(machine.c.floor == self.mock_washer.floor)
+                .where(machine.c.pos == self.mock_washer.pos)
+            )
+            res = db.execute(q).fetchone()
+            self.assertIsNotNone(res)
+            r = BaseRecord.from_row(res)
+            self.assertAlmostEqual(
+                r.time.timestamp(), datetime.datetime.now().timestamp(), delta=0.1
+            )
+
+        # check that the machine is actually in use
+        # and that the last_started_at is updated
+        with engine.connect() as db:
+            q = (
+                machine.select()
+                .where(machine.c.floor == self.mock_washer.floor)
+                .where(machine.c.pos == self.mock_washer.pos)
+            )
+            res = db.execute(q).fetchone()
+            self.assertIsNotNone(res)
+            m = Machine.from_row(res)
+            self.assertTrue(m.is_in_use)
+            self.assertAlmostEqual(
+                m.last_started_at.timestamp(),
+                datetime.datetime.now().timestamp(),
+                delta=0.1,
+            )
+
+    def test_stop_machine_use(self):
+        # first put a machine to use
+        with engine.connect() as db:
+            u = (
+                machine.update()
+                .where(machine.c.floor == self.mock_washer.floor)
+                .where(machine.c.pos == self.mock_washer.pos)
+                .values({"is_in_use": True})
+            )
+            db.execute(u)
+
+        # without API key
+        response: Response = client.put(
+            "/machine/stop",
+            params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},
+            headers={"x-api-key": "bad-api-key"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # now with the good API key
+        response: Response = client.put(
+            "/machine/stop",
+            params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},
+            headers={"x-api-key": "good-api-key"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        # check that the machine is actually no longer in use
+        # and that the last_started_at is updated
+        with engine.connect() as db:
+            q = (
+                machine.select()
+                .where(machine.c.floor == self.mock_washer.floor)
+                .where(machine.c.pos == self.mock_washer.pos)
+            )
+            res = db.execute(q).fetchone()
+            self.assertIsNotNone(res)
+            m = Machine.from_row(res)
+            self.assertFalse(m.is_in_use)

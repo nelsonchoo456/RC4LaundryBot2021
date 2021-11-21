@@ -78,3 +78,22 @@ async def update_machine(
     # TODO query param validation for floor and pos
     m = machine.update_machine(c, floor, pos, mu)  # should return machine.Machine
     return m
+
+
+@router.put(
+    "/start",
+    description="Start this machine.",
+    dependencies=[Depends(verify_api_key)],
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_machine(floor: int, pos: int, c: Connection = Depends(db.get_db)):
+    machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=True))
+
+@router.put(
+    "/stop",
+    description="Stop this machine.",
+    dependencies=[Depends(verify_api_key)],
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def start_machine(floor: int, pos: int, c: Connection = Depends(db.get_db)):
+    machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=False))

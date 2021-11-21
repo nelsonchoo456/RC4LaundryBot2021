@@ -1,7 +1,7 @@
 import datetime
 
-from sqlalchemy.engine import Connection
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.engine import Connection
 
 from api.db.models import MachineType
 from api.lib import FLOORS
