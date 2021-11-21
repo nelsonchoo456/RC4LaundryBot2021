@@ -30,7 +30,7 @@ async def create_machine(m: machine.Machine, c: Connection = Depends(db.get_db))
     description="Search for machines based on its direct attributes.",
 )
 async def search_machines(
-    mf: machine.MachineFilter, c: Connection = Depends(db.get_db)
+    mf: machine.MachineSearch, c: Connection = Depends(db.get_db)
 ):
     ms = machine.find_machines(c, mf)  # ms should be a list of machine.Machine
     return ms

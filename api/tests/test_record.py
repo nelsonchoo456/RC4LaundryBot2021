@@ -28,7 +28,7 @@ class TestRecord(unittest.TestCase):
 
     mock_dryer = Machine(
         id="2",
-        floor=6,
+        floor=5,
         pos=3,
         duration=datetime.timedelta(minutes=40),
         last_started_at=datetime.datetime.now(),
@@ -46,7 +46,7 @@ class TestRecord(unittest.TestCase):
         ),
         Record(
             machine_id=mock_dryer.id,
-            time=datetime.datetime(2050, 11, 20, 23, 59, 59),
+            time=datetime.datetime(2020, 11, 11, 23, 59, 59),
             floor=mock_dryer.floor,
             pos=mock_dryer.pos,
             type=mock_dryer.type,
@@ -79,7 +79,7 @@ class TestRecord(unittest.TestCase):
 
     def test_get_record_with_query(self):
         response = client.get(
-            "/record", params={"time_upper": datetime.datetime(2030, 1, 1, 0, 0, 0)}
+            "/record", params={"time_upper": datetime.datetime(2021, 1, 1, 0, 0, 0)}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), [jsonable_encoder(self.mock_records[0])])
+        self.assertEqual(response.json(), [jsonable_encoder(self.mock_records[1])])
