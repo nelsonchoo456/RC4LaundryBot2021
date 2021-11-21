@@ -135,7 +135,9 @@ class TestMachine(unittest.TestCase):
         # check the returned entity
         m = Machine(**response.json())
         self.assertTrue(m.is_in_use)
-        self.assertAlmostEqual(m.last_started_at.timestamp(), now.timestamp(), delta=0.1)
+        self.assertAlmostEqual(
+            m.last_started_at.timestamp(), now.timestamp(), delta=0.1
+        )
 
         # and check that the database entry actually changed
         with engine.connect() as db:
@@ -144,7 +146,9 @@ class TestMachine(unittest.TestCase):
             self.assertIsNotNone(r)
             m = Machine.from_row(r)
             self.assertTrue(m.is_in_use)
-            self.assertAlmostEqual(m.last_started_at.timestamp(), now.timestamp(), delta=0.1)
+            self.assertAlmostEqual(
+                m.last_started_at.timestamp(), now.timestamp(), delta=0.1
+            )
 
     def test_put_machine_to_use(self):
         response = client.put(
@@ -156,7 +160,11 @@ class TestMachine(unittest.TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         m = Machine(**response.json())
-        self.assertAlmostEqual(m.last_started_at.timestamp(), datetime.datetime.now().timestamp(), delta=0.1)
+        self.assertAlmostEqual(
+            m.last_started_at.timestamp(),
+            datetime.datetime.now().timestamp(),
+            delta=0.1,
+        )
 
         # check that a record was created
         with engine.connect() as db:
