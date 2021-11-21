@@ -23,16 +23,16 @@ class TestMachine(unittest.TestCase):
         floor=14,
         pos=0,
         duration=datetime.timedelta(minutes=30),
-        last_started_at=datetime.datetime.now(),
+        last_started_at=datetime.datetime(1970, 1, 1, 0, 0, 0),
         type=MachineType.washer,
         is_in_use=False,
     )
 
     mock_dryer = Machine(
-        floor=6,
+        floor=5,
         pos=3,
         duration=datetime.timedelta(minutes=40),
-        last_started_at=datetime.datetime.now(),
+        last_started_at=datetime.datetime(1970, 1, 1, 0, 0, 0),
         type=MachineType.dryer,
         is_in_use=True,
     )
@@ -135,7 +135,7 @@ class TestMachine(unittest.TestCase):
         # check the returned entity
         m = Machine(**response.json())
         self.assertTrue(m.is_in_use)
-        self.assertEqual(m.last_started_at, now)
+        self.assertAlmostEqual(m.last_started_at.timestamp(), now.timestamp(), delta=0.1)
 
         # and check that the database entry actually changed
         with engine.connect() as db:
@@ -144,7 +144,7 @@ class TestMachine(unittest.TestCase):
             self.assertIsNotNone(r)
             m = Machine.from_row(r)
             self.assertTrue(m.is_in_use)
-            self.assertEqual(m.last_started_at, now)
+            self.assertAlmostEqual(m.last_started_at.timestamp(), now.timestamp(), delta=0.1)
 
     def test_put_machine_to_use(self):
         response = client.put(
@@ -155,6 +155,9 @@ class TestMachine(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        m = Machine(**response.json())
+        self.assertAlmostEqual(m.last_started_at.timestamp(), datetime.datetime.now().timestamp(), delta=0.1)
+
         # check that a record was created
         with engine.connect() as db:
             q = record.select()
@@ -166,7 +169,7 @@ class TestMachine(unittest.TestCase):
                 delta=0.1,
             )
 
-        # check that record api works
+        # check that /record endpoint works
         response: Response = client.get(
             "/record",
             params={"floor": self.mock_washer.floor, "pos": self.mock_washer.pos},

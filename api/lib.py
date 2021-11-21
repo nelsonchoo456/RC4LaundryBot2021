@@ -1,19 +1,28 @@
-from typing import List, Optional
+import inspect
 
 import pydantic
+from pydantic import BaseModel
 from sqlalchemy.engine import Row
 
 
-class WithOptionalFields(pydantic.main.ModelMetaclass):
-    def __new__(cls, name, bases, namespaces, **kwargs):
-        annotations = namespaces.get("__annotations__", {})
-        for base in bases:
-            annotations.update(base.__annotations__)
-        for field in annotations:
-            if not field.startswith("__"):
-                annotations[field] = Optional[annotations[field]]
-        namespaces["__annotations__"] = annotations
-        return super().__new__(cls, name, bases, namespaces, **kwargs)
+def with_optional_fields(*fields):
+    """Decorator function used to modify a pydantic model's fields to all be optional.
+    Alternatively, you can  also pass the field names that should be made optional as arguments
+    to the decorator.
+    Taken from https://github.com/samuelcolvin/pydantic/issues/1223#issuecomment-775363074
+    """
+
+    def dec(_cls):
+        for field in fields:
+            _cls.__fields__[field].required = False
+        return _cls
+
+    if fields and inspect.isclass(fields[0]) and issubclass(fields[0], BaseModel):
+        cls = fields[0]
+        fields = cls.__fields__
+        return dec(cls)
+
+    return dec
 
 
 class BaseModel(pydantic.BaseModel):
