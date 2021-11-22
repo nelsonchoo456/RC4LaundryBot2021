@@ -4,17 +4,26 @@ Revamped laundry bot for RC4 under CSC IT
 
 ## Running Locally
 
-First create a virtual environment and install dependencies.
+First create a virtual environment and install dev dependencies.
 
 ```shell
 python -m venv .venv
-pip install -r requirements.txt requirements_dev.txt
+source .venv/bin/activate
+pip install -r requirements_dev.txt
 ```
 
 ### API
 
-Rename `api/.env.example` to `api/.env`. 
+Rename `api/.env.example` to `api/.env`. Use `pip install -r api/requirements.txt` to install the dependencies for api.
 From the `api/` directory, run `docker-compose up -d` to spin up two Postgres containers. One is used for testing, and another for development.
 
 To start the server, run `uvicorn api.main:app` in the root directory. The default port is 8000.
-To verify that everything works, running `./pants test api::` will run all tests for the `api` package.
+
+#### Testing
+
+Tests can be run with either `unittest` or `pytest`. Set the `RUN_ENV` environment variable to "test" first.
+
+```shell
+export RUN_ENV="test"
+python -m pytest . # or python -m unittest **/test_.py
+```

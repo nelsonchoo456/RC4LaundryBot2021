@@ -1,4 +1,5 @@
 import datetime
+import re
 import unittest
 
 from fastapi import status
@@ -54,6 +55,9 @@ class TestRecord(unittest.TestCase):
     ]
 
     def setUp(self) -> None:
+        self.assertRegex(
+            str(engine.url), re.compile("test$"), "Have you set $RUN_ENV to 'test'?"
+        )
         metadata_obj.drop_all(engine)
         metadata_obj.create_all(engine)
         with engine.connect() as db:

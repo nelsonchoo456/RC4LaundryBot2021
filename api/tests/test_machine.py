@@ -1,6 +1,7 @@
 import datetime
-import unittest
+import re
 from typing import TYPE_CHECKING
+from unittest import TestCase
 
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
@@ -19,7 +20,7 @@ if TYPE_CHECKING:  # not sure if we need this
 client = TestClient(app)
 
 
-class TestMachine(unittest.TestCase):
+class TestMachine(TestCase):
     mock_washer = Machine(
         floor=14,
         pos=0,
@@ -38,7 +39,16 @@ class TestMachine(unittest.TestCase):
         is_in_use=True,
     )
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        metadata_obj.drop_all(engine)
+
     def setUp(self) -> None:
+        self.assertRegex(
+            text=str(engine.url),
+            expected_regex=re.compile("test$"),
+            msg="Have you set $RUN_ENV to 'test'?",
+        )
         metadata_obj.drop_all(engine)
         metadata_obj.create_all(engine)
         with engine.connect() as db:
@@ -51,10 +61,6 @@ class TestMachine(unittest.TestCase):
                 ],
             )
             db.execute(api_key.insert().values(api_key="good-api-key"))
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        metadata_obj.drop_all(engine)
 
     def test_get_machine(self):
         response: Response = client.get("/machine")

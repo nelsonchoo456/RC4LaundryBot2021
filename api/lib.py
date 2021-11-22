@@ -1,7 +1,6 @@
 import inspect
 
 import pydantic
-from pydantic import BaseModel
 from sqlalchemy.engine import Row
 
 
