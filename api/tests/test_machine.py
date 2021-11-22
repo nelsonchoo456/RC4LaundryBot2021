@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from api.db.db import engine
 from api.db.models import MachineType, api_key, machine, metadata_obj, record
@@ -38,6 +39,7 @@ class TestMachine(unittest.TestCase):
     )
 
     def setUp(self) -> None:
+        metadata_obj.drop_all(engine)
         metadata_obj.create_all(engine)
         with engine.connect() as db:
             # insert some machines
@@ -50,7 +52,8 @@ class TestMachine(unittest.TestCase):
             )
             db.execute(api_key.insert().values(api_key="good-api-key"))
 
-    def tearDown(self) -> None:
+    @classmethod
+    def tearDownClass(cls) -> None:
         metadata_obj.drop_all(engine)
 
     def test_get_machine(self):
@@ -212,10 +215,12 @@ class TestMachine(unittest.TestCase):
 
         # then check that a record was created
         with engine.connect() as db:
-            q = (
-                record.select()
-                .where(machine.c.floor == self.mock_washer.floor)
-                .where(machine.c.pos == self.mock_washer.pos)
+            q = select(record).select_from(
+                record.join(
+                    machine,
+                    machine.c.floor == self.mock_washer.floor,
+                    machine.c.pos == self.mock_washer.pos,
+                )
             )
             res = db.execute(q).fetchone()
             self.assertIsNotNone(res)

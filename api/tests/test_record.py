@@ -54,6 +54,7 @@ class TestRecord(unittest.TestCase):
     ]
 
     def setUp(self) -> None:
+        metadata_obj.drop_all(engine)
         metadata_obj.create_all(engine)
         with engine.connect() as db:
             db.execute(
@@ -67,7 +68,8 @@ class TestRecord(unittest.TestCase):
                 record.insert(), [r.to_base_record().dict() for r in self.mock_records]
             )
 
-    def tearDown(self) -> None:
+    @classmethod
+    def tearDownClass(cls) -> None:
         metadata_obj.drop_all(engine)
 
     def test_get_record(self):
