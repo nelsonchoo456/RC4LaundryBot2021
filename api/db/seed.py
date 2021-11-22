@@ -1,16 +1,17 @@
+import os
 import datetime
 
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection, create_engine
 
-from api.db.models import MachineType
+from api.db.models import MachineType, metadata_obj
 from api.lib import FLOORS
 from api.machine import Machine
 
 from .models import machine
 
 
-def insert_machines(c: Connection):
+def seed_machines(c: Connection):
     ms = []
     for f in FLOORS:
         ms.extend(
@@ -48,3 +49,13 @@ def insert_machines(c: Connection):
 
     ins = insert(machine).values(ms).on_conflict_do_nothing()
     c.execute(ins)
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    engine = create_engine(os.environ.get("DB_URL"), echo=True)
+    metadata_obj.create_all(engine)
+    with engine.connect() as db:
+        seed_machines(db)
