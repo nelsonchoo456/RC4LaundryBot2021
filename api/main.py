@@ -14,7 +14,8 @@ load_dotenv()
 models.metadata_obj.create_all(db.engine)
 if os.environ.get("RUN_ENV") == "dev":
     with db.engine.connect() as c:
-        seed.insert_machines(c)
+        seed.seed_machines(c)
+
 app = FastAPI()
 
 app.include_router(routers.machine)
