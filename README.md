@@ -21,9 +21,5 @@ To start the server, run `uvicorn api.main:app` in the root directory. The defau
 
 #### Testing
 
-Tests can be run with either `unittest` or `pytest`. Set the `RUN_ENV` environment variable to "test" first.
-
-```shell
-export RUN_ENV="test"
-python -m pytest . # or python -m unittest **/test_.py
-```
+Tests can be run with either `unittest` or `pytest`, and requires the `$RUN_ENV` environment variable to be set to "test".
+Using `make test` will run all test with `pytest`.
