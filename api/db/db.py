@@ -6,7 +6,12 @@ from sqlalchemy import create_engine
 load_dotenv()
 
 
-engine = create_engine(os.environ.get("DB_URL"), echo=False)
+DB_URL = (
+    os.environ.get("TEST_DB_URL")
+    if os.environ.get("RUN_ENV") == "test"
+    else os.environ.get("DB_URL")
+)
+engine = create_engine(DB_URL)
 
 # db for dependency injection,
 # see https://fastapi.tiangolo.com/tutorial/sql-databases/#create-a-dependency

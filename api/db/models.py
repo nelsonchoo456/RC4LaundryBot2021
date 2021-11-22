@@ -1,8 +1,19 @@
 import datetime
 import enum
 
-from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Integer,
-                        Interval, MetaData, String, Table, UniqueConstraint)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    Interval,
+    MetaData,
+    String,
+    Table,
+    UniqueConstraint,
+)
 
 metadata_obj = MetaData()
 
