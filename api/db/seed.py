@@ -1,9 +1,10 @@
-import os
 import datetime
+import os
 
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Connection, create_engine
 
+from api.db.db import parse_cdb_uri
 from api.db.models import MachineType, metadata_obj
 from api.lib import FLOORS
 from api.machine import Machine
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv()
-    engine = create_engine(os.environ.get("DB_URL"), echo=True)
+    engine = create_engine(parse_cdb_uri(os.environ.get("DB_URI")), echo=True)
     metadata_obj.create_all(engine)
     with engine.connect() as db:
         seed_machines(db)

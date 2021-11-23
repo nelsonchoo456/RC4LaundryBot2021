@@ -1,5 +1,4 @@
 import datetime
-import re
 from typing import TYPE_CHECKING
 from unittest import TestCase
 
@@ -44,11 +43,6 @@ class TestMachine(TestCase):
         metadata_obj.drop_all(engine)
 
     def setUp(self) -> None:
-        self.assertRegex(
-            text=str(engine.url),
-            expected_regex=re.compile("test$"),
-            msg="Have you set $RUN_ENV to 'test'?",
-        )
         metadata_obj.drop_all(engine)
         metadata_obj.create_all(engine)
         with engine.connect() as db:
