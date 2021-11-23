@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.engine import Connection
 
 from api import machine
-from api.db import db, models
+from api.db import models
+from api.db.db import get_db
 from api.routers.lib import verify_api_key
 
 router = APIRouter(
@@ -19,7 +20,7 @@ router = APIRouter(
     description="Creates a new machine.",
     dependencies=[Depends(verify_api_key)],
 )
-async def create_machine(m: machine.Machine, c: Connection = Depends(db.get_db)):
+async def create_machine(m: machine.Machine, c: Connection = Depends(get_db)):
     machine.create_machine(c, m)
 
 
@@ -29,9 +30,7 @@ async def create_machine(m: machine.Machine, c: Connection = Depends(db.get_db))
     response_model=List[machine.Machine],
     description="Search for machines based on its direct attributes.",
 )
-async def search_machines(
-    mf: machine.MachineSearch, c: Connection = Depends(db.get_db)
-):
+async def search_machines(mf: machine.MachineSearch, c: Connection = Depends(get_db)):
     ms = machine.find_machines(c, mf)  # ms should be a list of machine.Machine
     return ms
 
@@ -43,7 +42,7 @@ async def search_machines(
 )
 async def get_machines(
     *,
-    c: Connection = Depends(db.get_db),
+    c: Connection = Depends(get_db),
     id: Optional[str] = None,
     floor: Optional[int] = None,
     pos: Optional[int] = None,
@@ -73,7 +72,7 @@ async def get_machines(
     dependencies=[Depends(verify_api_key)],
 )
 async def update_machine(
-    mu: machine.MachineUpdate, floor: int, pos: int, c: Connection = Depends(db.get_db)
+    mu: machine.MachineUpdate, floor: int, pos: int, c: Connection = Depends(get_db)
 ):
     # TODO query param validation for floor and pos
     m = machine.update_machine(c, floor, pos, mu)  # should return machine.Machine
@@ -86,7 +85,7 @@ async def update_machine(
     dependencies=[Depends(verify_api_key)],
     status_code=status.HTTP_202_ACCEPTED,
 )
-async def start_machine(floor: int, pos: int, c: Connection = Depends(db.get_db)):
+async def start_machine(floor: int, pos: int, c: Connection = Depends(get_db)):
     machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=True))
 
 
@@ -96,5 +95,5 @@ async def start_machine(floor: int, pos: int, c: Connection = Depends(db.get_db)
     dependencies=[Depends(verify_api_key)],
     status_code=status.HTTP_202_ACCEPTED,
 )
-async def stop_machine(floor: int, pos: int, c: Connection = Depends(db.get_db)):
+async def stop_machine(floor: int, pos: int, c: Connection = Depends(get_db)):
     machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=False))

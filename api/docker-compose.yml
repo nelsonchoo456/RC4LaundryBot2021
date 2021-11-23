@@ -1,21 +1,18 @@
-version: '3'
-services:
-  db:
-    container_name: rc4laundry-api-db
-    image: 'postgres'
-    ports:
-      - $POSTGRES_PORT:5432
-    environment:
-      POSTGRES_USER: $POSTGRES_USER
-      POSTGRES_DB: $POSTGRES_DB
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+version: "3.2"
 
-  db-test:
-    container_name: rc4laundry-api-test-db
-    image: 'postgres'
+services:
+  roach_1:
+    container_name: roach_1
+    image: cockroachdb/cockroach:latest
+    command: start-single-node --insecure
     ports:
-      - $POSTGRES_TEST_PORT:5432
-    environment:
-      POSTGRES_USER: $POSTGRES_USER
-      POSTGRES_DB: $POSTGRES_TEST_DB
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      - $ROACH_PORT:26257
+      - $ROACH_CONSOLE_PORT:8080
+
+  roach_2:
+    container_name: roach_2
+    image: cockroachdb/cockroach:latest
+    command: start-single-node --insecure
+    ports:
+      - $ROACH_TEST_PORT:26257
+      - $ROACH_CONSOLE_TEST_PORT:8080
