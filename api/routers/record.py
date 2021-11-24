@@ -28,7 +28,7 @@ async def get_records(
     pos: Optional[int] = None,
     type: Optional[MachineType] = None,
 ):
-    return record.find_records(
+    return record.filter_records(
         c,
         record.RecordFilter(
             machine_id=machine_id,

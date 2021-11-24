@@ -1,16 +1,17 @@
 import datetime
-from typing import Optional
+from typing import List, Optional
 
 import shortuuid
 from fastapi import HTTPException, status
 from pydantic import Field
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection, Row
 
 from api.db import models
 from api.lib import BaseModel
 from api.record import create_record
 
 # metadata definition for all fields
+# TODO move this somewhere more reasonable
 _field_id = Field(
     default_factory=shortuuid.uuid, description="A unique ID for this machine."
 )
@@ -37,14 +38,17 @@ _field_last_started_at_opt = Field(
 )
 _field_type = Field(..., description="The machine is either a washer or dryer.")
 _field_type_opt = Field(None, description=_field_type.description)
+_field_approx_time_left = Field(
+    ..., description="Approximate time remaining, in seconds, for this machine's cycle."
+)
+_field_approx_time_left_opt = Field(
+    None, description=_field_approx_time_left.description
+)
 
 
 class BaseMachine(BaseModel):
     floor: int = _field_floor
     pos: int = _field_pos
-
-    class Config:
-        orm_mode = True
 
 
 class Machine(BaseMachine):
@@ -53,6 +57,31 @@ class Machine(BaseMachine):
     duration: datetime.timedelta = _field_duration
     last_started_at: datetime.datetime = _field_last_started_at
     type: models.MachineType = _field_type
+
+
+class MachineReturn(Machine):
+    approx_time_left: datetime.timedelta = _field_approx_time_left
+
+    @classmethod
+    def compute_time_left(cls, start: datetime.datetime, duration: datetime.timedelta):
+        return max(datetime.timedelta(0), duration - (datetime.datetime.now() - start))
+
+    @classmethod
+    def from_row(cls, row: Row):
+        return cls(
+            **row._asdict(),
+            approx_time_left=cls.compute_time_left(row.last_started_at, row.duration),
+        )
+
+    @classmethod
+    def from_machine(cls, m: Machine):
+        return cls(
+            **dict(m),
+            approx_time_left=cls.compute_time_left(m.last_started_at, m.duration),
+        )
+
+    def to_machine(self) -> Machine:
+        return Machine(**self.dict())
 
 
 # Machine with all fields optional and set to None as default
@@ -82,6 +111,8 @@ class MachineUpdate(MachineOptional):
     pass
 
 
+# this class is very similar to MachinOptional, but note
+# the difference in the time-related fields
 class MachineFilter(BaseMachine):
     id: Optional[str] = _field_id_opt
     floor: Optional[int] = _field_floor_opt
@@ -96,7 +127,7 @@ class MachineFilter(BaseMachine):
     )
 
 
-def find_machines(c: Connection, mf: MachineFilter):
+def filter_machines(c: Connection, mf: MachineFilter) -> List[MachineReturn]:
     d = mf.dict(exclude_none=True)
     q = models.machine.select()
     for k, v in d.items():
@@ -109,24 +140,26 @@ def find_machines(c: Connection, mf: MachineFilter):
             continue
         q = q.where(models.machine.c[k] == v)
     res = c.execute(q)
-    return Machine.from_rows(res)
+    return MachineReturn.from_rows(res)
 
 
-def search_machines(db: Connection, search: MachineSearch):
+def search_machines(db: Connection, search: MachineSearch) -> List[MachineReturn]:
     q = models.machine.select()
     for k, v in search.dict(exclude_unset=True).items():
         q = q.where(models.machine.c[k] == v)
     res = db.execute(q)
-    return Machine.from_rows(res)
+    return MachineReturn.from_rows(res)
 
 
-def create_machine(db: Connection, m: Machine):
+def create_machine(db: Connection, m: Machine) -> None:
     ins = models.machine.insert().values(**m.dict())
     db.execute(ins)
 
 
-def update_machine(c: Connection, floor: int, pos: int, mu: MachineUpdate):
-    if mu.is_in_use:
+def update_machine(
+    c: Connection, floor: int, pos: int, mu: MachineUpdate
+) -> MachineReturn:
+    if mu.is_in_use and not mu.last_started_at:
         mu.last_started_at = datetime.datetime.now()
     stmnt = (
         models.machine.update()
@@ -142,5 +175,6 @@ def update_machine(c: Connection, floor: int, pos: int, mu: MachineUpdate):
             f"Machine at floor {floor} position {pos} not found",
         )
     if mu.is_in_use:
+        # create a record if the machine is started
         create_record(c, res.id)
-    return Machine.from_row(res)
+    return MachineReturn.from_row(res)

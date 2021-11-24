@@ -1,10 +1,12 @@
-.PHONY: test fmt seed roach-up roach-down
+.PHONY: test fmt seed
 
 test:
-	export RUN_ENV="test" && python -m pytest
+	export RUN_ENV="test"
+	python -m pytest
 
 fmt:
-	python -m black . && python -m isort .
+	python -m black .
+	python -m isort .
 
 seed:
 	python -m api.db.seed
