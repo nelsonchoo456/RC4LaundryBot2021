@@ -27,17 +27,17 @@ async def create_machine(m: machine.Machine, c: Connection = Depends(get_db)):
 # TODO test this
 @router.post(
     "/search",
-    response_model=List[machine.Machine],
+    response_model=List[machine.MachineReturn],
     description="Search for machines based on its direct attributes.",
 )
 async def search_machines(mf: machine.MachineSearch, c: Connection = Depends(get_db)):
-    ms = machine.find_machines(c, mf)  # ms should be a list of machine.Machine
+    ms = machine.filter_machines(c, mf)  # ms should be a list of machine.Machine
     return ms
 
 
 @router.get(
     "",
-    response_model=List[machine.Machine],
+    response_model=List[machine.MachineReturn],
     description="Returns a list of machines filtered by the query parameters provided.",
 )
 async def get_machines(
@@ -51,7 +51,7 @@ async def get_machines(
     last_started_before: Optional[datetime.datetime] = None,
     last_started_after: Optional[datetime.datetime] = None
 ):
-    return machine.find_machines(
+    return machine.filter_machines(
         c,
         machine.MachineFilter(
             id=id,
@@ -67,7 +67,7 @@ async def get_machines(
 
 @router.put(
     "",
-    response_model=machine.Machine,
+    response_model=machine.MachineReturn,
     description="Performs partial update of specified machine.",
     dependencies=[Depends(verify_api_key)],
 )

@@ -31,7 +31,7 @@ class Record(BaseRecord):
 
 # RecordFilter is used for querying records
 class RecordFilter(BaseModel):
-    # TODO code dupliation here, once again, as in machine.Machine too
+    # TODO fix: code dupliation here, once again, as in machine.Machine too
     machine_id: Optional[str]
     time_lower: Optional[datetime.datetime]
     time_upper: Optional[datetime.datetime]
@@ -40,7 +40,7 @@ class RecordFilter(BaseModel):
     type: Optional[MachineType]
 
 
-def find_records(c: Connection, rf: RecordFilter):
+def filter_records(c: Connection, rf: RecordFilter):
     q = select(
         record.c.machine_id,
         record.c.time,
