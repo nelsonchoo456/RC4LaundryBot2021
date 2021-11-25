@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from random import randint
+from itertools import count
 
 from shortuuid import uuid
 
@@ -7,11 +7,13 @@ from api.db.models import MachineType
 from api.machine import Machine, MachineReturn
 from api.record import Record
 
+_floor_counter = count(0, 1)
+
 
 def get_mock_machine(type: MachineType, is_in_use: bool) -> Machine:
     return Machine(
-        floor=randint(3, 17),
-        pos=randint(0, 3),
+        floor=next(_floor_counter),
+        pos=0 if type == MachineType.washer else 2,
         duration=timedelta(minutes=30)
         if type == MachineType.washer
         else timedelta(minutes=40),
@@ -28,10 +30,10 @@ def get_mock_machine_return(type: MachineType, is_in_use: bool) -> MachineReturn
     return MachineReturn.from_machine(m)
 
 
-def get_mock_record(m: Machine) -> Record:
+def get_mock_record(m: Machine, time: datetime = datetime.now()) -> Record:
     return Record(
         machine_id=m.id,
-        time=datetime.now(),
+        time=time,
         floor=m.floor,
         pos=m.pos,
         type=m.type,

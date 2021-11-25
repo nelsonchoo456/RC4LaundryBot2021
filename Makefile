@@ -8,5 +8,5 @@ fmt:
 	python -m black .
 	python -m isort .
 
-seed:
+seed: docker-compose.yml
 	python -m api.db.seed
