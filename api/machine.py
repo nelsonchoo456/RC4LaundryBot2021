@@ -8,7 +8,7 @@ from sqlalchemy.engine import Connection, Row
 
 from api.db import models
 from api.lib import BaseModel
-from api.record import create_record
+from api.usage import create_usage
 
 # metadata definition for all fields
 # TODO move this somewhere more reasonable
@@ -175,6 +175,6 @@ def update_machine(
             f"Machine at floor {floor} position {pos} not found",
         )
     if mu.is_in_use:
-        # create a record if the machine is started
-        create_record(c, res.id)
+        # create a usage record if the machine is started
+        create_usage(c, res.id)
     return MachineReturn.from_row(res)

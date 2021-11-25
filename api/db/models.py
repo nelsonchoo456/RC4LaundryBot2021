@@ -43,8 +43,8 @@ api_key = Table(
     Column("api_key", String, unique=True, nullable=False),
 )
 
-record = Table(
-    "record",
+usage_details = Table(
+    "usage_details",
     metadata_obj,
     Column("machine_id", None, ForeignKey("machine.id")),
     Column("time", DateTime, nullable=False),

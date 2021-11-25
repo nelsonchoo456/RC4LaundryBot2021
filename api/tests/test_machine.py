@@ -1,3 +1,4 @@
+from random import randint
 from datetime import datetime
 from time import perf_counter
 from typing import TYPE_CHECKING
@@ -8,12 +9,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from api.db.db import engine
-from api.db.models import MachineType, api_key, machine, metadata_obj, record
+from api.db.models import MachineType, api_key, machine, metadata_obj, usage_details
 from api.machine import Machine, MachineUpdate
 from api.main import app
-from api.record import BaseRecord
 from api.tests.lib import assertSameMachines
 from api.tests.mocks import get_api_key, get_mock_machine, get_mock_machine_return
+from api.usage import BaseUsage
 
 if TYPE_CHECKING:  # not sure if we need this
     from requests import Response
@@ -197,17 +198,17 @@ class TestMachine(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-        # then check that a record was created
+        # then check that a usage record was created
         with engine.connect() as db:
-            q = select(record).select_from(
-                record.join(
+            q = select(usage_details).select_from(
+                usage_details.join(
                     machine,
                     machine.c.id == self.mock_washer_idle.id,
                 )
             )
             res = db.execute(q).fetchone()
             self.assertIsNotNone(res)
-            r = BaseRecord.from_row(res)
+            r = BaseUsage.from_row(res)
             self.assertAlmostEqual(
                 r.time.timestamp(), datetime.now().timestamp(), delta=0.1
             )
@@ -257,3 +258,18 @@ class TestMachine(TestCase):
             self.assertIsNotNone(res)
             m = Machine.from_row(res)
             self.assertFalse(m.is_in_use)
+
+    def test_start_stop_non_existent_machine(self):
+        response: Response = client.put(
+            "/machine/start",
+            params={"floor": randint(6969, 696969), "pos": randint(420, 4200)},
+            headers={"x-api-key": self.good_api_key},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response: Response = client.put(
+            "/machine/stop",
+            params={"floor": randint(6969, 696969), "pos": randint(420, 4200)},
+            headers={"x-api-key": self.good_api_key},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
