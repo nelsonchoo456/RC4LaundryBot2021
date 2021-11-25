@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from api.db.db import engine
 from api.db.models import MachineType, machine, metadata_obj, usage_details
 from api.main import app
-from api.tests.lib import assertSameUsages
+from api.tests.lib import assert_same_usages
 from api.tests.mocks import get_mock_machine_return, get_mock_usage
 
 client = TestClient(app)
@@ -54,7 +54,7 @@ class TestUsageDetails(unittest.TestCase):
     def test_get_usage(self):
         response = client.get("/usage")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        assertSameUsages(
+        assert_same_usages(
             self,
             response.json(),
             [
@@ -69,14 +69,14 @@ class TestUsageDetails(unittest.TestCase):
         # by type
         response = client.get("/usage", params={"type": MachineType.dryer})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        assertSameUsages(
+        assert_same_usages(
             self, response.json(), [self.mock_dryer_usage, self.mock_dryer_usage_old]
         )
 
         # by time, get the usage details from before 2021-1-1
         response = client.get("/usage", params={"time_upper": datetime(2021, 1, 1)})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        assertSameUsages(
+        assert_same_usages(
             self,
             response.json(),
             [self.mock_washer_usage_old, self.mock_dryer_usage_old],

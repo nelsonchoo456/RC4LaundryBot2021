@@ -7,8 +7,9 @@ from api.machine import Machine, MachineReturn
 from api.usage import Usage
 
 
-# compares a json response against a predefined list of MachineReturns
-def assertSameMachines(t: TestCase, m1: List[Any], m2: List[MachineReturn]):
+def assert_same_machines(t: TestCase, m1: List[Any], m2: List[MachineReturn]):
+    """Utility function to compare a json response against a
+    predefined list of MachineReturn"""
     m1, m2 = sorted(m1, key=lambda m: m["id"]), sorted(m2, key=lambda m: m.id)
     t.assertCountEqual([Machine(**m) for m in m1], [m.to_machine() for m in m2])
 
@@ -21,6 +22,7 @@ def assertSameMachines(t: TestCase, m1: List[Any], m2: List[MachineReturn]):
         )
 
 
-# compares json response against a predefined list of Usages
-def assertSameUsages(t: TestCase, r1: List[Any], r2: List[Usage]):
+def assert_same_usages(t: TestCase, r1: List[Any], r2: List[Usage]):
+    """Utility function to compare a json response against
+    a predefined list of Usage."""
     t.assertCountEqual(r1, [jsonable_encoder(r) for r in r2])

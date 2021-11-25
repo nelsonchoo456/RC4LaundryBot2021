@@ -1,5 +1,5 @@
-from random import randint
 from datetime import datetime
+from random import randint
 from time import perf_counter
 from typing import TYPE_CHECKING
 from unittest import TestCase
@@ -12,7 +12,7 @@ from api.db.db import engine
 from api.db.models import MachineType, api_key, machine, metadata_obj, usage_details
 from api.machine import Machine, MachineUpdate
 from api.main import app
-from api.tests.lib import assertSameMachines
+from api.tests.lib import assert_same_machines
 from api.tests.mocks import get_api_key, get_mock_machine, get_mock_machine_return
 from api.usage import BaseUsage
 
@@ -66,7 +66,7 @@ class TestMachine(TestCase):
     def test_get_machine(self):
         response: Response = client.get("/machine")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        assertSameMachines(
+        assert_same_machines(
             self,
             response.json(),
             [
@@ -80,7 +80,7 @@ class TestMachine(TestCase):
     def test_get_machine_with_query(self):
         response: Response = client.get("/machine", params={"type": "washer"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        assertSameMachines(
+        assert_same_machines(
             self,
             response.json(),
             [
@@ -91,7 +91,7 @@ class TestMachine(TestCase):
 
         response: Response = client.get("/machine?is_in_use=true")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        assertSameMachines(
+        assert_same_machines(
             self,
             response.json(),
             [

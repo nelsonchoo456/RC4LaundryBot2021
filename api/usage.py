@@ -1,5 +1,7 @@
+"""Model definitions and CRUD methods for usage records."""
+
 import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import Field
 from sqlalchemy import select
@@ -8,6 +10,7 @@ from sqlalchemy.engine import Connection
 from api.db.models import MachineType, machine, usage_details
 from api.lib import BaseModel
 
+# TODO move these things somewhere more reasonable
 _machine_id_field = Field(
     ..., description="ID of the machine associated with this usage record."
 )
@@ -32,11 +35,17 @@ _time_lower_field = Field(
 
 
 class BaseUsage(BaseModel):
+    """BaseUsage has shared fields for all usage models. These are
+    the fields which will be stored in the relataional db table."""
+
     machine_id: str = _machine_id_field
     time: datetime.datetime = _time_field
 
 
 class Usage(BaseUsage):
+    """DTO object for usage details. Carries more information on the
+    machine associated with the usage record."""
+
     floor: int = _floor_field
     pos: int = _pos_field
     type: MachineType = _type_field
@@ -45,9 +54,9 @@ class Usage(BaseUsage):
         return BaseUsage(machine_id=self.machine_id, time=self.time)
 
 
-# UsageFilter is used for querying usage details
 class UsageFilter(BaseModel):
-    # TODO fix: code dupliation here, once again, as in machine.Machine too
+    """UsageFilter is a utility model for filtering usage records."""
+
     machine_id: Optional[str] = _machine_id_field_opt
     time_lower: Optional[datetime.datetime] = _time_lower_field
     time_upper: Optional[datetime.datetime] = _time_upper_field
@@ -56,7 +65,9 @@ class UsageFilter(BaseModel):
     type: Optional[MachineType] = _type_field_opt
 
 
-def filter_usage(c: Connection, rf: UsageFilter):
+def filter_usage(c: Connection, rf: UsageFilter) -> List[Usage]:
+    """filter_usage performs one query based on the provided filter
+    and returns a list of Usage objects."""
     q = select(
         usage_details.c.machine_id,
         usage_details.c.time,
@@ -83,6 +94,8 @@ def filter_usage(c: Connection, rf: UsageFilter):
 
 
 def create_usage(c: Connection, machine_id: str):
+    """create_usage inserts a usage record into the database
+    using the current time."""
     c.execute(
         usage_details.insert().values(
             machine_id=machine_id, time=datetime.datetime.now()

@@ -1,7 +1,7 @@
 import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.engine import Connection
 
 from api import machine

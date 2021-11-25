@@ -6,13 +6,15 @@ from sqlalchemy.engine import Connection, create_engine
 
 from api.db.db import parse_cdb_uri
 from api.db.models import MachineType, metadata_obj
-from api.lib import FLOORS
 from api.machine import Machine
 
 from .models import machine
 
+FLOORS = [5, 8, 11, 14, 17]
+
 
 def seed_machines(c: Connection):
+    """Seeds the database with a set of machines, hard-coded."""
     ms = []
     for f in FLOORS:
         ms.extend(

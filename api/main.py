@@ -1,3 +1,5 @@
+"""Entry point for starting the server"""
+
 import os
 
 from dotenv import load_dotenv
