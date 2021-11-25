@@ -25,6 +25,9 @@ def with_optional_fields(*fields):
 
 
 class BaseModel(pydantic.BaseModel):
+    """Extension of PyDantic's default BaseModel to support
+    converting from sqlalchemy.engine.Row"""
+
     @classmethod
     def from_row(cls, row: Row):
         return cls(**row._asdict())
@@ -32,6 +35,3 @@ class BaseModel(pydantic.BaseModel):
     @classmethod
     def from_rows(cls, rows):
         return [cls.from_row(row) for row in rows]
-
-
-FLOORS = [5, 8, 11, 14, 17]

@@ -1,3 +1,5 @@
+"""Contains model definitions and CRUD methods for machines."""
+
 import datetime
 from typing import List, Optional
 
@@ -10,8 +12,7 @@ from api.db import models
 from api.lib import BaseModel
 from api.usage import create_usage
 
-# metadata definition for all fields
-# TODO move this somewhere more reasonable
+# TODO move these metadata somewhere more reasonable
 _field_id = Field(
     default_factory=shortuuid.uuid, description="A unique ID for this machine."
 )
@@ -47,11 +48,16 @@ _field_approx_time_left_opt = Field(
 
 
 class BaseMachine(BaseModel):
+    """BaseMachine has shared fields across all machine models."""
+
     floor: int = _field_floor
     pos: int = _field_pos
 
 
 class Machine(BaseMachine):
+    """Machine is a basic class for any machine. This model corresponds to
+    the table in the database."""
+
     id: str = _field_id
     is_in_use: Optional[bool] = _field_is_in_use
     duration: datetime.timedelta = _field_duration
@@ -60,6 +66,10 @@ class Machine(BaseMachine):
 
 
 class MachineReturn(Machine):
+    """MachineReturn is a DTO object to be used when returning
+    json response to the client. It adds an `appprox_time_left`
+    field."""
+
     approx_time_left: datetime.timedelta = _field_approx_time_left
 
     @classmethod
@@ -84,8 +94,9 @@ class MachineReturn(Machine):
         return Machine(**self.dict())
 
 
-# Machine with all fields optional and set to None as default
 class MachineOptional(BaseMachine):
+    """MachineOptional is a utility class with optional fields."""
+
     id: Optional[str] = _field_id_opt
     floor: Optional[int] = _field_floor_opt
     pos: Optional[int] = _field_pos_opt
@@ -104,16 +115,21 @@ class MachineOptional(BaseMachine):
 
 
 class MachineSearch(MachineOptional):
+    """MachineSearch is a model used to search machines."""
+
     pass
 
 
 class MachineUpdate(MachineOptional):
+    """MachineUpdate is used to perform partial updates on machines."""
+
     pass
 
 
-# this class is very similar to MachinOptional, but note
-# the difference in the time-related fields
 class MachineFilter(BaseMachine):
+    """MachineFilter is a utility class for filtering. Note the `last_started_before`
+    and `last_started_after` fields. Otherwise, it is the same as Machine"""
+
     id: Optional[str] = _field_id_opt
     floor: Optional[int] = _field_floor_opt
     pos: Optional[int] = _field_pos_opt

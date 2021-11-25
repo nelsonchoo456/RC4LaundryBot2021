@@ -9,6 +9,8 @@ async def verify_api_key(
     x_api_key: str = Header(..., description="A valid API token."),
     c: Connector = Depends(get_db),
 ):
+    """verify_api_key is a dependency for routes which require
+    authentication."""
     if not validate_api_key(c, x_api_key):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
