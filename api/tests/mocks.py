@@ -5,7 +5,7 @@ from shortuuid import uuid
 
 from api.db.models import MachineType
 from api.machine import Machine, MachineReturn
-from api.record import Record
+from api.usage import Usage
 
 _floor_counter = count(0, 1)
 
@@ -30,8 +30,8 @@ def get_mock_machine_return(type: MachineType, is_in_use: bool) -> MachineReturn
     return MachineReturn.from_machine(m)
 
 
-def get_mock_record(m: Machine, time: datetime = datetime.now()) -> Record:
-    return Record(
+def get_mock_usage(m: Machine, time: datetime = datetime.now()) -> Usage:
+    return Usage(
         machine_id=m.id,
         time=time,
         floor=m.floor,

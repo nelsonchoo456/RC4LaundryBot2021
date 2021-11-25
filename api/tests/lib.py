@@ -4,7 +4,7 @@ from unittest import TestCase
 from fastapi.encoders import jsonable_encoder
 
 from api.machine import Machine, MachineReturn
-from api.record import Record
+from api.usage import Usage
 
 
 # compares a json response against a predefined list of MachineReturns
@@ -21,6 +21,6 @@ def assertSameMachines(t: TestCase, m1: List[Any], m2: List[MachineReturn]):
         )
 
 
-# compares json response against a predefined list of Records
-def assertSameRecords(t: TestCase, r1: List[Any], r2: List[Record]):
+# compares json response against a predefined list of Usages
+def assertSameUsages(t: TestCase, r1: List[Any], r2: List[Usage]):
     t.assertCountEqual(r1, [jsonable_encoder(r) for r in r2])

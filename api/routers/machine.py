@@ -1,7 +1,7 @@
 import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.engine import Connection
 
 from api import machine
@@ -43,13 +43,21 @@ async def search_machines(mf: machine.MachineSearch, c: Connection = Depends(get
 async def get_machines(
     *,
     c: Connection = Depends(get_db),
-    id: Optional[str] = None,
-    floor: Optional[int] = None,
-    pos: Optional[int] = None,
-    is_in_use: Optional[bool] = None,
-    type: Optional[models.MachineType] = None,
-    last_started_before: Optional[datetime.datetime] = None,
-    last_started_after: Optional[datetime.datetime] = None
+    id: Optional[str] = Query(None, description=machine._field_id.description),
+    floor: Optional[int] = Query(None, description=machine._field_floor.description),
+    pos: Optional[int] = Query(None, description=machine._field_pos.description),
+    is_in_use: Optional[bool] = Query(
+        None, description=machine._field_is_in_use.description
+    ),
+    type: Optional[models.MachineType] = Query(
+        None, description=machine._field_type.description
+    ),
+    last_started_before: Optional[datetime.datetime] = Query(
+        None, description="An upper bound for the time when this machine last started."
+    ),
+    last_started_after: Optional[datetime.datetime] = Query(
+        None, description="A lower bound for the time when this machine last started."
+    )
 ):
     return machine.filter_machines(
         c,
@@ -72,9 +80,12 @@ async def get_machines(
     dependencies=[Depends(verify_api_key)],
 )
 async def update_machine(
-    mu: machine.MachineUpdate, floor: int, pos: int, c: Connection = Depends(get_db)
+    *,
+    mu: machine.MachineUpdate,
+    floor: int = Query(..., description=machine._field_floor.description),
+    pos: int = Query(..., description=machine._field_pos.description),
+    c: Connection = Depends(get_db)
 ):
-    # TODO query param validation for floor and pos
     m = machine.update_machine(c, floor, pos, mu)  # should return machine.Machine
     return m
 
@@ -85,7 +96,11 @@ async def update_machine(
     dependencies=[Depends(verify_api_key)],
     status_code=status.HTTP_202_ACCEPTED,
 )
-async def start_machine(floor: int, pos: int, c: Connection = Depends(get_db)):
+async def start_machine(
+    floor: int = Query(..., description=machine._field_floor.description),
+    pos: int = Query(..., description=machine._field_pos.description),
+    c: Connection = Depends(get_db),
+):
     machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=True))
 
 
@@ -95,5 +110,9 @@ async def start_machine(floor: int, pos: int, c: Connection = Depends(get_db)):
     dependencies=[Depends(verify_api_key)],
     status_code=status.HTTP_202_ACCEPTED,
 )
-async def stop_machine(floor: int, pos: int, c: Connection = Depends(get_db)):
+async def stop_machine(
+    floor: int = Query(..., description=machine._field_floor.description),
+    pos: int = Query(..., description=machine._field_pos.description),
+    c: Connection = Depends(get_db),
+):
     machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=False))

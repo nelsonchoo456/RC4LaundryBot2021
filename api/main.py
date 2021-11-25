@@ -19,4 +19,4 @@ if os.environ.get("RUN_ENV") == "dev":
 app = FastAPI()
 
 app.include_router(routers.machine)
-app.include_router(routers.record)
+app.include_router(routers.usage)
