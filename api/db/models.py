@@ -41,6 +41,7 @@ api_key = Table(
     metadata_obj,
     Column("id", Integer, primary_key=True),
     Column("api_key", String, unique=True, nullable=False),
+    Column("user", String, unique=True),
 )
 
 usage_details = Table(
@@ -48,4 +49,11 @@ usage_details = Table(
     metadata_obj,
     Column("machine_id", None, ForeignKey("machine.id")),
     Column("time", DateTime, nullable=False),
+)
+
+raspi = Table(
+    "raspi",
+    metadata_obj,
+    Column("floor", Integer, unique=True, nullable=False),
+    Column("ip_addr", String, unique=True, nullable=False),
 )

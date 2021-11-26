@@ -14,10 +14,10 @@ def validate_api_key(c: Connector, key: str) -> bool:
     return True
 
 
-def create_api_key(c: Connector) -> str:
+def create_api_key(c: Connector, user: str = None) -> str:
     """create_api_key generates an api key, stores it in
     the database, and then returns its value"""
     new_key = shortuuid.uuid()
-    stmnt = api_key.insert().values(api_key=new_key)
+    stmnt = api_key.insert().values(api_key=new_key, user=user)
     c.execute(stmnt)
     return new_key

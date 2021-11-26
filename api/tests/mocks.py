@@ -5,14 +5,15 @@ from shortuuid import uuid
 
 from api.db.models import MachineType
 from api.machine import Machine, MachineReturn
+from api.raspi import Raspi
 from api.usage import Usage
 
-_floor_counter = count(0, 1)
+_int_generator = count(0, 1)
 
 
 def get_mock_machine(type: MachineType, is_in_use: bool) -> Machine:
     return Machine(
-        floor=next(_floor_counter),
+        floor=next(_int_generator),
         pos=0 if type == MachineType.washer else 2,
         duration=timedelta(minutes=30)
         if type == MachineType.washer
@@ -42,3 +43,7 @@ def get_mock_usage(m: Machine, time: datetime = datetime.now()) -> Usage:
 
 def get_api_key() -> str:
     return uuid()
+
+
+def get_mock_pi() -> Raspi:
+    return Raspi(floor=next(_int_generator), ip_addr=uuid())

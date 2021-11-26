@@ -22,3 +22,4 @@ app = FastAPI()
 
 app.include_router(routers.machine)
 app.include_router(routers.usage)
+app.include_router(routers.raspi)
