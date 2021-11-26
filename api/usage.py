@@ -11,25 +11,25 @@ from api.db.models import MachineType, machine, usage_details
 from api.lib import BaseModel
 
 # TODO move these things somewhere more reasonable
-_machine_id_field = Field(
+_field_machine_id = Field(
     ..., description="ID of the machine associated with this usage record."
 )
-_machine_id_field_opt = Field(None, description=_machine_id_field.description)
-_time_field = Field(..., description="Time when it was started.")
-_floor_field = Field(
+_field_machine_id_field = Field(None, description=_field_machine_id.description)
+_field_time = Field(..., description="Time when it was started.")
+_field_floor = Field(
     ..., description="Floor of the machine associated with this usage record."
 )
-_floor_field_opt = Field(None, description=_floor_field.description)
-_pos_field = Field(
+_field_floor_opt = Field(None, description=_field_floor.description)
+_field_pos = Field(
     ..., description="Position of the machine associated with this usage record."
 )
-_pos_field_opt = Field(None, description=_pos_field.description)
-_type_field = Field(..., description="Washer or dryer.")
-_type_field_opt = Field(None, description=_type_field.description)
-_time_upper_field = Field(
+_field_pos_opt = Field(None, description=_field_pos.description)
+_field_type = Field(..., description="Washer or dryer.")
+_field_type_opt = Field(None, description=_field_type.description)
+_field_time_upper = Field(
     ..., description="An upper bound on the time for usage records."
 )
-_time_lower_field = Field(
+_field_time_lower = Field(
     ..., description="A lower bound on the time for usage records."
 )
 
@@ -38,17 +38,17 @@ class BaseUsage(BaseModel):
     """BaseUsage has shared fields for all usage models. These are
     the fields which will be stored in the relataional db table."""
 
-    machine_id: str = _machine_id_field
-    time: datetime.datetime = _time_field
+    machine_id: str = _field_machine_id
+    time: datetime.datetime = _field_time
 
 
 class Usage(BaseUsage):
     """DTO object for usage details. Carries more information on the
     machine associated with the usage record."""
 
-    floor: int = _floor_field
-    pos: int = _pos_field
-    type: MachineType = _type_field
+    floor: int = _field_floor
+    pos: int = _field_pos
+    type: MachineType = _field_type
 
     def to_base_usage(self):
         return BaseUsage(machine_id=self.machine_id, time=self.time)
@@ -57,12 +57,12 @@ class Usage(BaseUsage):
 class UsageFilter(BaseModel):
     """UsageFilter is a utility model for filtering usage records."""
 
-    machine_id: Optional[str] = _machine_id_field_opt
-    time_lower: Optional[datetime.datetime] = _time_lower_field
-    time_upper: Optional[datetime.datetime] = _time_upper_field
-    floor: Optional[int] = _floor_field_opt
-    pos: Optional[int] = _pos_field_opt
-    type: Optional[MachineType] = _type_field_opt
+    machine_id: Optional[str] = _field_machine_id_field
+    time_lower: Optional[datetime.datetime] = _field_time_lower
+    time_upper: Optional[datetime.datetime] = _field_time_upper
+    floor: Optional[int] = _field_floor_opt
+    pos: Optional[int] = _field_pos_opt
+    type: Optional[MachineType] = _field_type_opt
 
 
 def filter_usage(c: Connection, rf: UsageFilter) -> List[Usage]:
