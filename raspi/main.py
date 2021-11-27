@@ -6,10 +6,10 @@ from time import sleep
 from os.path import join, isdir
 import socket
 
-from rpi-sensor import Machine
+from sensor import Machine
 import requests
 
-FLOOR = 4
+FLOOR = 4 # TODO: Shift to settings.json
 
 def main() -> None:
     with open('settings.json', 'r') as f:
