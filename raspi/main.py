@@ -1,27 +1,15 @@
 from datetime import datetime
 import json
 import logging
+from os import mkdir
 from time import sleep
-from os.path import join
+from os.path import join, isdir
 import socket
 
-from sensor import Machine
+from rpi-sensor import Machine
 import requests
 
-# Import necessary in python 3.7 to typehint lists. 
-# See https://www.python.org/dev/peps/pep-0563/#enabling-the-future-behavior-in-python-3-7
-# from __future__ import annotations 
-
 FLOOR = 4
-
-logging.basicConfig(level=logging.INFO,
-                    format='[%(asctime)s] [%(levelname)s] %(message)s',
-                    datefmt='%d/%m/%Y %I:%M:%S %p',
-                    handlers=[
-                        # Send to both stderr and file at the same time
-                        logging.FileHandler(join('logs',f'{datetime.today().date()}.log')),
-                        logging.StreamHandler()
-                    ])
 
 def main() -> None:
     with open('settings.json', 'r') as f:
@@ -62,4 +50,15 @@ def update_rpi_ip(endpoint: str) -> None:
  
 
 if __name__ == "__main__":
+    # Set up basic logging
+    if not isdir("logs"):
+        mkdir("logs")
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(asctime)s] [%(levelname)s] %(message)s',
+                        datefmt='%d/%m/%Y %I:%M:%S %p',
+                        handlers=[
+                            # Send to both stderr and file at the same time
+                            logging.FileHandler(join('logs',f'{datetime.today().date()}.log')),
+                            logging.StreamHandler()
+                        ])
     main()
