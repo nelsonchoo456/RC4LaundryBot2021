@@ -36,6 +36,12 @@ variable "gcr_region" {
   default     = "asia-east1"
 }
 
+variable "registry_location" {
+  description = "Selected location for Cloud Registry."
+  type        = string
+  default     = "asia"
+}
+
 variable "gcp_repo_name" {
   description = "Repository name for GCP source repo."
   type        = string
@@ -46,4 +52,10 @@ variable "gcp_repo_branch" {
   description = "Branch used for triggering Cloud Builds."
   type        = string
   default     = "prod"
+}
+
+variable "gcp_service_name" {
+  description = "Name of the Cloud Run service."
+  type        = string
+  default     = "rc4laundry-api"
 }
