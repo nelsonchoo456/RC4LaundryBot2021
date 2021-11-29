@@ -18,5 +18,6 @@
         }
     ],
     "location": "RC4L5",
-    "endpoint": "http://localhost:8000"
+    "endpoint": "http://localhost:8000",
+    "timeout": 5
 }
