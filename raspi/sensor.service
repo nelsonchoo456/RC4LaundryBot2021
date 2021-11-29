@@ -1,0 +1,12 @@
+[Unit]
+Description=Laundry Bot Sensor
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -u /home/pi/RC4LaundryBot2021/raspi/sensor.py
+WorkingDirectory=/home/pi/RC4LaundryBot2021/raspi
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

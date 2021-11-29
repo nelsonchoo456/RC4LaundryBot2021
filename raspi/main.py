@@ -12,22 +12,25 @@ import requests
 FLOOR = 4 # TODO: Shift to settings.json
 
 def main() -> None:
+    logging.info("Initializing script, hello world!")
+
     with open('settings.json', 'r') as f:
         settings: dict = json.load(f)
+
+    timeout: int = settings['timeout']
 
     # Prepend the endpoint with "http://" if necessary
     endpoint: str = settings['endpoint']
     endpoint = endpoint if endpoint.startswith("http://") else "http://" + endpoint
 
     # Create all the class instances
-    machines = [Machine(x['pin'], x['id'], endpoint) for x in settings['machines']]
+    machines = [Machine(x['pin'], x['id'], endpoint, http_timeout=timeout) for x in settings['machines']]
 
-    # Run forever
     while True:
-        update_rpi_ip(endpoint)
+        update_rpi_ip(endpoint, timeout)
         for m in machines:
             m.update()
-        sleep(300)
+        sleep(60)
 
 # Following code is taken from https://stackoverflow.com/a/28950776
 def get_ip() -> str:
@@ -41,10 +44,11 @@ def get_ip() -> str:
         s.close()
     return IP
 
-def update_rpi_ip(endpoint: str) -> None:
+def update_rpi_ip(endpoint: str, http_timeout: int) -> None:
     ip: str = get_ip()
     try:
-        requests.put(endpoint, {"floor": FLOOR, "ip_addr": ip})
+        requests.put(endpoint, {"floor": FLOOR, "ip_addr": ip}, timeout=http_timeout)
+        logging.debug(f"Successfully updated RPi IP to backend.")
     except (requests.ConnectionError, Exception) as e:
         logging.error(f"Error while trying to update RPi IP to backend. Error trace: {e}")
  
