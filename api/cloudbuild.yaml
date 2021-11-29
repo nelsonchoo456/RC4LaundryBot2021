@@ -1,0 +1,21 @@
+steps:
+  # build container
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-f",
+        "./api/Dockerfile",
+        "-t",
+        "${_GCR_REGION}.gcr.io/$PROJECT_ID/${_SERVICE_NAME}",
+        "--build-arg",
+        "db_uri=${_CDB_URI}",
+      ]
+
+# push image to cloud registry
+images: ["${_GCR_REGION}.gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"]
+
+substitutions:
+  _GCR_REGION: "asia-east1"
+  _SERVICE_NAME: "rc4laundry-api"
+  _CDB_URI: ""
