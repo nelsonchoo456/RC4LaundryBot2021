@@ -14,7 +14,7 @@ pip install -r requirements_dev.txt
 
 ## API
 
-Rename `api/.env.example` to `api/.env`. Use `pip install -r api/requirements.txt` to install the dependencies.
+Copy the contents of `api/.env.example` to a new file named `api/.env`. Use `pip install -r api/requirements.txt` to install the dependencies.
 From the `api/` directory, run `docker-compose up -d` to spin up two CockroachDB containers. One is used for testing, and another for development.
 
 To start the server, run `uvicorn api.main:app` in the root directory. The default port is 8000.
