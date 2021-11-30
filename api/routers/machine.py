@@ -30,8 +30,8 @@ async def create_machine(m: machine.Machine, c: Connection = Depends(get_db)):
     response_model=List[machine.MachineReturn],
     description="Search for machines based on its direct attributes.",
 )
-async def search_machines(mf: machine.MachineSearch, c: Connection = Depends(get_db)):
-    ms = machine.filter_machines(c, mf)  # ms should be a list of machine.Machine
+async def search_machines(m: machine.MachineSearch, c: Connection = Depends(get_db)):
+    ms = machine.filter_machines(c, m)  # ms should be a list of machine.Machine
     return ms
 
 
@@ -46,8 +46,8 @@ async def get_machines(
     id: Optional[str] = Query(None, description=machine._field_id.description),
     floor: Optional[int] = Query(None, description=machine._field_floor.description),
     pos: Optional[int] = Query(None, description=machine._field_pos.description),
-    is_in_use: Optional[bool] = Query(
-        None, description=machine._field_is_in_use.description
+    status: Optional[models.MachineStatus] = Query(
+        None, description=machine._field_status.description
     ),
     type: Optional[models.MachineType] = Query(
         None, description=machine._field_type.description
@@ -65,7 +65,7 @@ async def get_machines(
             id=id,
             floor=floor,
             pos=pos,
-            is_in_use=is_in_use,
+            status=status,
             type=type,
             last_started_before=last_started_before,
             last_started_after=last_started_after,
@@ -101,7 +101,9 @@ async def start_machine(
     pos: int = Query(..., description=machine._field_pos.description),
     c: Connection = Depends(get_db),
 ):
-    machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=True))
+    machine.update_machine(
+        c, floor, pos, machine.MachineUpdate(status=models.MachineStatus.in_use)
+    )
 
 
 @router.put(
@@ -115,4 +117,6 @@ async def stop_machine(
     pos: int = Query(..., description=machine._field_pos.description),
     c: Connection = Depends(get_db),
 ):
-    machine.update_machine(c, floor, pos, machine.MachineUpdate(is_in_use=False))
+    machine.update_machine(
+        c, floor, pos, machine.MachineUpdate(status=models.MachineStatus.idle)
+    )

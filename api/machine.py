@@ -24,8 +24,6 @@ _field_pos = Field(
     description="Position of machine in the laundry room. Starts from 0 and counts from left to right.",
 )
 _field_pos_opt = Field(None, description=_field_pos.description)
-_field_is_in_use = Field(False, description="Self explanatory.")
-_field_is_in_use_opt = Field(None, description=_field_is_in_use.description)
 _field_duration = Field(
     ..., description="Approximate duration, in seconds, for one cycle of this machine."
 )
@@ -45,6 +43,8 @@ _field_approx_time_left = Field(
 _field_approx_time_left_opt = Field(
     None, description=_field_approx_time_left.description
 )
+_field_status = Field(..., description="Brief status of the machine.")
+_field_status_opt = Field(None, description=_field_status.description)
 
 
 class BaseMachine(BaseModel):
@@ -59,7 +59,7 @@ class Machine(BaseMachine):
     the table in the database."""
 
     id: str = _field_id
-    is_in_use: Optional[bool] = _field_is_in_use
+    status: models.MachineStatus = _field_status
     duration: datetime.timedelta = _field_duration
     last_started_at: datetime.datetime = _field_last_started_at
     type: models.MachineType = _field_type
@@ -100,7 +100,7 @@ class MachineOptional(BaseMachine):
     id: Optional[str] = _field_id_opt
     floor: Optional[int] = _field_floor_opt
     pos: Optional[int] = _field_pos_opt
-    is_in_use: Optional[bool] = _field_is_in_use_opt
+    status: Optional[models.MachineStatus] = _field_status_opt
     duration: Optional[datetime.timedelta] = _field_duration_opt
     last_started_at: Optional[datetime.datetime] = _field_last_started_at_opt
     type: Optional[models.MachineType] = _field_type_opt
@@ -108,7 +108,7 @@ class MachineOptional(BaseMachine):
     class Config:
         schema_extra = {
             "example": {
-                "is_in_use": True,
+                "status": models.MachineStatus.error,
                 "last_started_at": datetime.datetime.now(),
             }
         }
@@ -133,7 +133,7 @@ class MachineFilter(BaseMachine):
     id: Optional[str] = _field_id_opt
     floor: Optional[int] = _field_floor_opt
     pos: Optional[int] = _field_pos_opt
-    is_in_use: Optional[bool] = _field_is_in_use_opt
+    status: Optional[models.MachineStatus] = _field_status_opt
     type: Optional[models.MachineType] = _field_type_opt
     last_started_before: Optional[datetime.datetime] = Field(
         None, description="Machine should have last started before this time."
@@ -175,7 +175,7 @@ def create_machine(db: Connection, m: Machine) -> None:
 def update_machine(
     c: Connection, floor: int, pos: int, mu: MachineUpdate
 ) -> MachineReturn:
-    if mu.is_in_use and not mu.last_started_at:
+    if mu.status == models.MachineStatus.in_use and not mu.last_started_at:
         mu.last_started_at = datetime.datetime.now()
     stmnt = (
         models.machine.update()
@@ -190,7 +190,7 @@ def update_machine(
             status.HTTP_404_NOT_FOUND,
             f"Machine at floor {floor} position {pos} not found",
         )
-    if mu.is_in_use:
+    if mu.status == models.MachineStatus.in_use:
         # create a usage record if the machine is started
         create_usage(c, res.id)
     return MachineReturn.from_row(res)

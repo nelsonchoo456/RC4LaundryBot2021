@@ -8,31 +8,37 @@ provider "google" {
   project = var.gcp_project_id
 }
 
+# Enable the all APIs needed.
 resource "google_project_service" "gcp_services" {
   for_each = toset(var.gcp_service_list)
   project  = var.gcp_project_id
   service  = each.key
 }
 
+# TODO Check if this block is really needed.
 resource "google_project_iam_binding" "gcp_iam_bindings" {
   project = var.gcp_project_id
 
   role = "roles/iam.serviceAccountUser"
   members = [
-    "serviceAccount:${var.gcp_project_num}@cloudbuild.gserviceaccount.com",
+    local.cloud_build_service_account,
   ]
 }
 
+# Provision Cloud Source Repository.
 resource "google_sourcerepo_repository" "gcp_repo" {
   name = var.gcp_repo_name
 }
 
+# Create a Cloud Build trigger for each push to the `prod` branch
+# of the GCP Source Repo.
 resource "google_cloudbuild_trigger" "cloud_build_trigger" {
   trigger_template {
     branch_name = var.gcp_repo_branch
     repo_name   = var.gcp_repo_name
   }
 
+  # These variables will be passed into the build steps.
   substitutions = {
     _DB_URI       = var.cdb_uri
     _LOCATION     = var.registry_location
@@ -43,11 +49,13 @@ resource "google_cloudbuild_trigger" "cloud_build_trigger" {
   filename = "api/cloudbuild.yaml"
 }
 
+# Provision Container Registry.
 resource "google_container_registry" "registry" {
   project  = var.gcp_project_id
   location = "asia"
 }
 
+# Provision Cloud Run.
 resource "google_cloud_run_service" "cloud_run" {
   name     = var.gcp_service_name
   location = var.gcr_region
@@ -61,6 +69,8 @@ resource "google_cloud_run_service" "cloud_run" {
   template {
     spec {
       containers {
+        # This points to the image built and pushed to the
+        # Container Registry.
         image = local.image_name
       }
     }
@@ -72,6 +82,8 @@ resource "google_cloud_run_service" "cloud_run" {
   }
 }
 
+# Allows Cloud Build to deploy to cloud run after each
+# successful build.
 resource "google_cloud_run_service_iam_binding" "gcr_iam_bindings" {
   location = google_cloud_run_service.cloud_run.location
   project  = google_cloud_run_service.cloud_run.project
@@ -79,10 +91,11 @@ resource "google_cloud_run_service_iam_binding" "gcr_iam_bindings" {
 
   role = "roles/run.admin"
   members = [
-    "serviceAccount:${var.gcp_project_num}@cloudbuild.gserviceaccount.com",
+    local.cloud_build_service_account,
   ]
 }
 
+# Allows anyone to call the API.
 resource "google_cloud_run_service_iam_member" "allUsers" {
   service  = google_cloud_run_service.cloud_run.name
   location = google_cloud_run_service.cloud_run.location
@@ -91,5 +104,6 @@ resource "google_cloud_run_service_iam_member" "allUsers" {
 }
 
 locals {
-  image_name = "${var.registry_location}.gcr.io/${var.gcp_project_id}/${var.gcp_service_name}:latest"
+  image_name                  = "${var.registry_location}.gcr.io/${var.gcp_project_id}/${var.gcp_service_name}:latest"
+  cloud_build_service_account = "serviceAccount:${var.gcp_project_num}@cloudbuild.gserviceaccount.com"
 }

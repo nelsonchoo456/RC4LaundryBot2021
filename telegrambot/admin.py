@@ -1,2 +1,2 @@
 # Paste the api key below!
-API_KEY = ''
+API_KEY = ""
