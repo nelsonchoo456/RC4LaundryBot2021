@@ -5,7 +5,7 @@ version: "3.2"
 services:
   roach_1:
     container_name: roach_1
-    image: cockroachdb/cockroach:latest
+    image: cockroachdb/cockroach:v21.1.12
     command: start-single-node --insecure
     ports:
       - $ROACH_PORT:26257
@@ -13,7 +13,7 @@ services:
 
   roach_2:
     container_name: roach_2
-    image: cockroachdb/cockroach:latest
+    image: cockroachdb/cockroach:v21.1.12
     command: start-single-node --insecure
     ports:
       - $ROACH_TEST_PORT:26257
