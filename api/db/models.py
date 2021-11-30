@@ -2,7 +2,6 @@ import datetime
 import enum
 
 from sqlalchemy import (
-    Boolean,
     Column,
     DateTime,
     Enum,
@@ -23,13 +22,20 @@ class MachineType(str, enum.Enum):
     dryer = "dryer"
 
 
+class MachineStatus(str, enum.Enum):
+    in_use = "in_use"
+    idle = "idle"
+    error = "error"
+    finishing = "finishing"
+
+
 machine = Table(
     "machine",
     metadata_obj,
     Column("id", String, primary_key=True),
     Column("floor", Integer, nullable=False),
     Column("pos", Integer, nullable=False),
-    Column("is_in_use", Boolean, nullable=False),
+    Column("status", Enum(MachineStatus)),
     Column("duration", Interval, nullable=False),
     Column("last_started_at", DateTime, default=datetime.datetime(1970, 1, 1, 0, 0)),
     Column("type", Enum(MachineType)),
@@ -39,7 +45,7 @@ machine = Table(
 api_key = Table(
     "api_key",
     metadata_obj,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("api_key", String, unique=True, nullable=False),
     Column("user", String, unique=True),
 )

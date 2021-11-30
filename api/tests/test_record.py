@@ -6,7 +6,13 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from api.db.db import engine
-from api.db.models import MachineType, machine, metadata_obj, usage_details
+from api.db.models import (
+    MachineStatus,
+    MachineType,
+    machine,
+    metadata_obj,
+    usage_details,
+)
 from api.main import app
 from api.tests.lib import assert_same_usages
 from api.tests.mocks import get_mock_machine_return, get_mock_usage
@@ -15,8 +21,8 @@ client = TestClient(app)
 
 
 class TestUsageDetails(unittest.TestCase):
-    mock_washer = get_mock_machine_return(MachineType.washer, True)
-    mock_dryer = get_mock_machine_return(MachineType.dryer, True)
+    mock_washer = get_mock_machine_return(MachineType.washer, MachineStatus.idle)
+    mock_dryer = get_mock_machine_return(MachineType.dryer, MachineStatus.idle)
     mock_washer_usage = get_mock_usage(mock_washer)
     mock_dryer_usage = get_mock_usage(mock_dryer)
     mock_washer_usage_old = get_mock_usage(mock_washer, datetime(2020, 11, 11, 23, 59))

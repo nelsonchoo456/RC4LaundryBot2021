@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Connection, create_engine
 
 from api.db.db import parse_cdb_uri
-from api.db.models import MachineType, metadata_obj
+from api.db.models import MachineStatus, MachineType, metadata_obj
 from api.machine import Machine
 
 from .models import machine
@@ -25,6 +25,7 @@ def seed_machines(c: Connection):
                     pos=0,
                     duration=datetime.timedelta(minutes=30),
                     type=MachineType.washer,
+                    status=MachineStatus.idle,
                 ).dict(),
                 Machine(
                     id=f"{f}:1",
@@ -32,6 +33,7 @@ def seed_machines(c: Connection):
                     pos=1,
                     duration=datetime.timedelta(minutes=30),
                     type=MachineType.washer,
+                    status=MachineStatus.idle,
                 ).dict(),
                 Machine(
                     id=f"{f}:2",
@@ -39,6 +41,7 @@ def seed_machines(c: Connection):
                     pos=2,
                     duration=datetime.timedelta(minutes=40),
                     type=MachineType.dryer,
+                    status=MachineStatus.idle,
                 ).dict(),
                 Machine(
                     id=f"{f}:3",
@@ -46,6 +49,7 @@ def seed_machines(c: Connection):
                     pos=3,
                     duration=datetime.timedelta(minutes=40),
                     type=MachineType.dryer,
+                    status=MachineStatus.idle,
                 ).dict(),
             ]
         )

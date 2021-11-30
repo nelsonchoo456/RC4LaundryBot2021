@@ -9,7 +9,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from api.db.db import engine
-from api.db.models import MachineType, api_key, machine, metadata_obj, usage_details
+from api.db.models import (
+    MachineStatus,
+    MachineType,
+    api_key,
+    machine,
+    metadata_obj,
+    usage_details,
+)
 from api.machine import Machine, MachineUpdate
 from api.main import app
 from api.tests.lib import assert_same_machines
@@ -24,12 +31,20 @@ client = TestClient(app)
 
 class TestMachine(TestCase):
     # washers
-    mock_washer_idle: Machine = get_mock_machine_return(MachineType.washer, False)
-    mock_washer_working: Machine = get_mock_machine_return(MachineType.washer, True)
+    mock_washer_idle: Machine = get_mock_machine_return(
+        MachineType.washer, MachineStatus.idle
+    )
+    mock_washer_working: Machine = get_mock_machine_return(
+        MachineType.washer, MachineStatus.in_use
+    )
 
     # dryers
-    mock_dryer_idle: Machine = get_mock_machine_return(MachineType.dryer, False)
-    mock_dryer_working: Machine = get_mock_machine_return(MachineType.dryer, True)
+    mock_dryer_idle: Machine = get_mock_machine_return(
+        MachineType.dryer, MachineStatus.idle
+    )
+    mock_dryer_working: Machine = get_mock_machine_return(
+        MachineType.dryer, MachineStatus.in_use
+    )
 
     # fake api keys
     good_api_key: str = get_api_key()
@@ -78,7 +93,7 @@ class TestMachine(TestCase):
         )
 
     def test_get_machine_with_query(self):
-        response: Response = client.get("/machine", params={"type": "washer"})
+        response: Response = client.get("/machine", params={"type": MachineType.washer})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assert_same_machines(
             self,
@@ -89,7 +104,9 @@ class TestMachine(TestCase):
             ],
         )
 
-        response: Response = client.get("/machine?is_in_use=true")
+        response: Response = client.get(
+            "/machine", params={"status": MachineStatus.in_use}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assert_same_machines(
             self,
@@ -101,7 +118,7 @@ class TestMachine(TestCase):
         )
 
     def test_create_machine_bad_api_key(self):
-        m = get_mock_machine(MachineType.washer, False)
+        m = get_mock_machine(MachineType.washer, MachineStatus.idle)
 
         response: Response = client.post(
             "/machine", data=m.json(), headers={"x-api-key": self.bad_api_key}
@@ -109,7 +126,7 @@ class TestMachine(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_machine_good_api_key(self):
-        m = get_mock_machine(MachineType.washer, False)
+        m = get_mock_machine(MachineType.washer)
 
         response: Response = client.post(
             "/machine", data=m.json(), headers={"x-api-key": self.good_api_key}
@@ -125,7 +142,7 @@ class TestMachine(TestCase):
 
     def test_update_machine_bad_api_key(self):
         mu = MachineUpdate(
-            is_in_use=True,
+            status=MachineStatus.in_use,
             last_started_at=datetime.now(),
         )
 
@@ -142,7 +159,7 @@ class TestMachine(TestCase):
 
     def test_update_machine_good_api_key(self):
         mu = MachineUpdate(
-            is_in_use=True,
+            status=MachineStatus.in_use,
             last_started_at=datetime.now(),
         )
 
@@ -159,7 +176,7 @@ class TestMachine(TestCase):
 
         # check the returned entity
         m = Machine(**response.json())
-        self.assertTrue(m.is_in_use)
+        self.assertEqual(m.status, MachineStatus.in_use)
         self.assertAlmostEqual(
             m.last_started_at.timestamp(), datetime.now().timestamp(), delta=0.1
         )
@@ -169,10 +186,9 @@ class TestMachine(TestCase):
             q = machine.select().where(machine.c.id == self.mock_washer_idle.id)
             r = db.execute(q).fetchone()
             self.assertIsNotNone(r)
-            m = Machine.from_row(r)
-            self.assertTrue(m.is_in_use)
+            self.assertEqual(r.status, MachineStatus.in_use)
             self.assertAlmostEqual(
-                m.last_started_at.timestamp(), datetime.now().timestamp(), delta=0.1
+                r.last_started_at.timestamp(), datetime.now().timestamp(), delta=0.1
             )
 
     def test_start_machine_use(self):
@@ -206,9 +222,9 @@ class TestMachine(TestCase):
                     machine.c.id == self.mock_washer_idle.id,
                 )
             )
-            res = db.execute(q).fetchone()
-            self.assertIsNotNone(res)
-            r = BaseUsage.from_row(res)
+            row = db.execute(q).fetchone()
+            self.assertIsNotNone(row)
+            r = BaseUsage.from_row(row)
             self.assertAlmostEqual(
                 r.time.timestamp(), datetime.now().timestamp(), delta=0.1
             )
@@ -217,12 +233,11 @@ class TestMachine(TestCase):
         # and that the last_started_at is updated
         with engine.connect() as db:
             q = machine.select().where(machine.c.id == self.mock_washer_idle.id)
-            res = db.execute(q).fetchone()
-            self.assertIsNotNone(res)
-            m = Machine.from_row(res)
-            self.assertTrue(m.is_in_use)
+            row = db.execute(q).fetchone()
+            self.assertIsNotNone(row)
+            self.assertEqual(row.status, MachineStatus.in_use)
             self.assertAlmostEqual(
-                m.last_started_at.timestamp(),
+                row.last_started_at.timestamp(),
                 datetime.now().timestamp(),
                 delta=0.1,
             )
@@ -256,8 +271,7 @@ class TestMachine(TestCase):
             q = machine.select().where(machine.c.id == self.mock_dryer_working.id)
             res = db.execute(q).fetchone()
             self.assertIsNotNone(res)
-            m = Machine.from_row(res)
-            self.assertFalse(m.is_in_use)
+            self.assertEqual(res.status, MachineStatus.idle)
 
     def test_start_stop_non_existent_machine(self):
         response: Response = client.put(

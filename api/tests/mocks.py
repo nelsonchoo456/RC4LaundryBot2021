@@ -3,7 +3,7 @@ from itertools import count
 
 from shortuuid import uuid
 
-from api.db.models import MachineType
+from api.db.models import MachineStatus, MachineType
 from api.machine import Machine, MachineReturn
 from api.raspi import Raspi
 from api.usage import Usage
@@ -11,7 +11,9 @@ from api.usage import Usage
 _int_generator = count(0, 1)
 
 
-def get_mock_machine(type: MachineType, is_in_use: bool) -> Machine:
+def get_mock_machine(
+    type: MachineType, status: MachineStatus = MachineStatus.idle
+) -> Machine:
     return Machine(
         floor=next(_int_generator),
         pos=0 if type == MachineType.washer else 2,
@@ -19,15 +21,17 @@ def get_mock_machine(type: MachineType, is_in_use: bool) -> Machine:
         if type == MachineType.washer
         else timedelta(minutes=40),
         type=type,
-        is_in_use=is_in_use,
+        status=status,
         last_started_at=datetime.now() - timedelta(minutes=10)
-        if is_in_use
+        if status == MachineStatus.in_use
         else datetime(2021, 11, 11, 23, 59),
     )
 
 
-def get_mock_machine_return(type: MachineType, is_in_use: bool) -> MachineReturn:
-    m = get_mock_machine(type, is_in_use)
+def get_mock_machine_return(
+    type: MachineType, status: MachineStatus = MachineStatus.idle
+) -> MachineReturn:
+    m = get_mock_machine(type, status)
     return MachineReturn.from_machine(m)
 
 
