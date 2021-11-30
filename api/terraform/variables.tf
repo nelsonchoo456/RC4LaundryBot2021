@@ -1,4 +1,5 @@
-# These are to be manually passed in.
+# These are to be manually passed in, or defined in a separate
+# `terraform.tfvars` file.
 
 variable "gcp_project_id" {
   description = "GCP Project ID"
