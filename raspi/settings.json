@@ -1,0 +1,23 @@
+{
+    "machines": [
+        {
+            "pin": 14,
+            "id": "0501"
+        },
+        {
+            "pin": 15,
+            "id": "0502"
+        },
+        {
+            "pin": 18,
+            "id": "0503"
+        },
+        {
+            "pin": 23,
+            "id": "0504"
+        }
+    ],
+    "location": "RC4L5",
+    "endpoint": "http://localhost:8000",
+    "timeout": 5
+}
