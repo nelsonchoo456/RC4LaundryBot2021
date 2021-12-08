@@ -1,0 +1,91 @@
+service: rc4laundry-api-aws
+frameworkVersion: "2 || 3"
+useDotenv: true
+
+custom:
+  stage: ${opt:stage, 'dev'}
+  usageTable: usage-table-${self:custom.stage}
+  pythonRequirements:
+    dockerizePip: true
+    slim: true
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8001
+      migrate: true
+  prune:
+    automatic: true
+    number: 1
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: "20201221"
+  region: ap-southeast-1
+  stage: ${self:custom.stage}
+  environment:
+    REDIS_HOST: ${env:REDIS_HOST}
+    REDIS_PORT: ${env:REDIS_PORT}
+    REDIS_DB: ${env:REDIS_DB}
+    REDIS_PASS: ${env:REDIS_PASS}
+    API_KEY: ${env:API_KEY}
+    DYNAMODB_REGION: ${self:provider.region}
+    DYNAMODB_USAGE_TABLE: ${self:custom.usageTable}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "Fn::GetAtt": [UsageTable, Arn]
+
+resources:
+  Resources:
+    UsageTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: loc
+            AttributeType: S
+          - AttributeName: started_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: loc
+            KeyType: HASH
+          - AttributeName: started_at
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.usageTable}
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dynamodb-local
+  - serverless-prune-plugin
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**
+    - .pytest_cache/**
+    - .env*
+    - README.md
+    - tests/**
+    - .dynamodb/**
+    - "**/__pycache__/**"
+
+functions:
+  app:
+    handler: app.main.handler
+    events:
+      - httpApi:
+          method: get
+          path: /
+      - httpApi:
+          method: any
+          path: /{proxy+}
+    maximumRetryAttempts: 0

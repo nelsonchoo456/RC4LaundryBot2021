@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "serverless-prune-plugin": "^1.6.1",
+    "serverless-python-requirements": "^5.2.1"
+  },
+  "dependencies": {
+    "serverless-dynamodb-local": "^0.2.40"
+  }
+}

@@ -2,41 +2,79 @@
 
 Revamped laundry bot for RC4 under CSC IT.
 
-## Running Locally
+## JSON API
 
-First create a virtual environment and install dev dependencies.
+### Requirements
 
-```shell
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements_dev.txt
+Development for the JSON API requires these.
+
+- Python 3.8
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Serverless CLI](https://www.serverless.com/framework/docs/getting-started)
+- NPM
+
+### Development
+
+1. Create a virtual environment and install dependencies.
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt -r requirements.dev.txt
+npm install
 ```
 
-## API
+2. Copy the contents of `.env.example` to a new file named `.env.local`. The `.env.example` file contains default secrets/settings for local development.
+3. Start the dev server with the commands below. The default port is 8000, and OpenAPI docs are at http://localhost:8000/docs.
 
-Copy the contents of `api/.env.example` to a new file named `api/.env`. Use `pip install -r api/requirements.txt` to install the dependencies.
-From the `api/` directory, run `docker-compose up -d` to spin up two CockroachDB containers. One is used for testing, and another for development.
-
-To start the server, run `uvicorn api.main:app --reload` in the root directory, which also watches for code changes. The default port is 8000.
+```bash
+sls dynamodb start # <-- in a separate terminal
+docker-compose up -d
+uvicorn app.main:app --reload
+```
 
 ### Testing
 
-Tests for the API can be run with either `unittest` or `pytest`, and requires the `RUN_ENV` environment variable to be set to "test".
+Tests can be run with pytest.
 
-Using `make test` will run all tests with `pytest`.
+```
+python -m pytest -v
+```
 
-### Deploying
+### Deployment
 
-The API is currently deployed to Google Cloud Platform, with most of the provisioning managed by [Terraform](https://www.terraform.io/). The relational database is a free [CockroachDB cluster](https://www.cockroachlabs.com/).
+This flowchart briefly describes the components of the API.
 
-1. [Create a new project](https://console.cloud.google.com) in Google Cloud. Take note of the assigned project ID and project number.
-2. Create a free [CockroachDB cluster](https://cockroachlabs.cloud/); Postgres will also work fine. Note the connection string.
-3. Copy the contents of `terraform.tfvars.example` into `terraform.tfvars`, and fill in the variables.
-4. Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install), which provides the `gcloud` command. Then run `gcloud init` to authenticate.
-5. If all went well, run these commands individually from the `api/terraform` directory.
+[![](https://mermaid.ink/img/eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG4gICAgQShSYXNwaSkgLS1QT1NUL1BVVC9QQVRDSC0tPiBCe0FQSX1cbiAgICBCIC0tTWFjaGluZSAmIFJhc3BpIHN0YXRlLS0-IENbKFJlZGlzKV1cbiAgICBCIC0tVXNhZ2UgZGV0YWlsIHJlY29yZHMtLT4gRFsoRHluYW1vREIpXSAgIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifSwidXBkYXRlRWRpdG9yIjp0cnVlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9)](https://mermaid.live/edit#eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG4gICAgQShSYXNwaSkgLS1QT1NUL1BVVC9QQVRDSC0tPiBCe0FQSX1cbiAgICBCIC0tTWFjaGluZSAmIFJhc3BpIHN0YXRlLS0-IENbKFJlZGlzKV1cbiAgICBCIC0tVXNhZ2UgZGV0YWlsIHJlY29yZHMtLT4gRFsoRHluYW1vREIpXSAgIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6dHJ1ZSwiYXV0b1N5bmMiOnRydWUsInVwZGF0ZURpYWdyYW0iOmZhbHNlfQ)
 
-```shell
-terraform init
-terraform plan
-terraform apply
+Here are the steps for deploying.
+
+1. First we'll configure a Redis instance. [Redis Labs](https://redis.com/) has a free tier option. Enable the RedisJSON and RediSearch modules when creating the database.
+   - Take note of the host, port, and default user password.
+2. Set up a `.env` file. This file is used for deployment only and is different from `.env.local`. An example showing the required fields is below.
+   - Choose an API key you like.
+   - Get the other fields from the Redis Labs console.
+   - Once the file is ready, run `make seed-redis` to create the machines in Redis.
+
+```bash
+API_KEY=super-secure-key
+REDIS_HOST=
+REDIS_PORT=
+REDIS_DB=0
+REDIS_PASS=
+```
+
+3. Finally, run `sls deploy` to provision the rest of the infrastructure.
+   - Run `sls deploy` again to push any changes to AWS.
+
+## Miscellaneous
+
+Pre-commit is configure for this repo. If you'd like to use it, follow these steps.
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.dev.txt
+pre-commit install
+pre-commit autoupdate
 ```

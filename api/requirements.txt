@@ -1,8 +1,6 @@
 fastapi==0.70.0
-psycopg2-binary==2.9.2
+uvicorn==0.15.0
+mangum==0.12.3
 python-dotenv==0.19.2
-SQLAlchemy==1.4.27
-uvicorn[standard]==0.15.0
-shortuuid==1.0.8
-sqlalchemy-cockroachdb==1.4.2
-gunicorn==20.1.0
+boto3==1.20.21
+redis==4.0.2

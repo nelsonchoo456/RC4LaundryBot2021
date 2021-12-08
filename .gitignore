@@ -5,7 +5,7 @@
 /.pants.workdir.file_lock*
 
 # python
-/.venv/
+/venv/
 **/__pycache__/
 
 # useless metadata
