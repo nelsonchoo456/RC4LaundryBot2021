@@ -17,3 +17,7 @@ test:
 fmt:
 	python -m black app tests
 	python -m isort app tests
+
+.PHONY: deploy
+deploy:
+	sls cleanCache && sls deploy

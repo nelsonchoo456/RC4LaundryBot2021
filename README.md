@@ -64,8 +64,8 @@ REDIS_DB=0
 REDIS_PASS=
 ```
 
-3. Finally, run `sls deploy` to provision the rest of the infrastructure.
-   - Run `sls deploy` again to push any changes to AWS.
+3. Finally, run `make deploy` to provision the rest of the infrastructure.
+   - Run `make deploy` again to push any changes to AWS.
 
 ## Miscellaneous
 
